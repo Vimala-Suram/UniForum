@@ -16,6 +16,9 @@ public class MainUniForum extends Application {
             );
 
             Scene scene = new Scene(root, 900, 600);
+            scene.getStylesheets().add(
+                getClass().getResource("application.css").toExternalForm()
+            );
             primaryStage.setScene(scene);
             primaryStage.setTitle("UniForum - Forum");
             primaryStage.show();
