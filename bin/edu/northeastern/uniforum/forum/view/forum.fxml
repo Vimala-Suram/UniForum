@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.northeastern.uniforum.forum.controller.ForumController">
+<StackPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.northeastern.uniforum.forum.controller.ForumController">
+
+    <!-- Main Content -->
+    <BorderPane>
 
     <!-- ================= TOP: Navigation Bar ================= -->
     <top>
@@ -103,4 +108,20 @@
         </HBox>
     </center>
 
-</BorderPane>
+    </BorderPane>
+
+    <!-- Modal Overlay (Hidden by default) -->
+    <StackPane fx:id="modalOverlay" alignment="CENTER" visible="false" managed="false">
+        <!-- Semi-transparent dark background - click to close -->
+        <Region fx:id="overlayBackground" 
+                style="-fx-background-color: rgba(0, 0, 0, 0.7);" 
+                onMouseClicked="#onOverlayClicked" />
+        
+        <!-- Dialog Container -->
+        <VBox fx:id="dialogContainer" alignment="CENTER" spacing="0" 
+              mouseTransparent="false">
+            <!-- Dialog content will be loaded here -->
+        </VBox>
+    </StackPane>
+
+</StackPane>

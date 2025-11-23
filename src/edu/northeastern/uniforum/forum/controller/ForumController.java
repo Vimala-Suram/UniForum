@@ -1,16 +1,24 @@
 package edu.northeastern.uniforum.forum.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import edu.northeastern.uniforum.forum.dao.PostDAO;
 import edu.northeastern.uniforum.forum.model.Reply;
+import edu.northeastern.uniforum.forum.util.TimeUtil;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 //import javafx.scene.control.Separator;  
 import javafx.geometry.Pos;
@@ -18,6 +26,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.Group;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.scene.paint.Color;
+import javafx.scene.input.MouseEvent;
 
 
 public class ForumController {
@@ -44,6 +57,15 @@ public class ForumController {
     private VBox recentPostsContainer;   // holds recent posts in sidebar
 
     @FXML
+    private StackPane modalOverlay;   // overlay for modal dialogs
+
+    @FXML
+    private VBox dialogContainer;   // container for dialog content
+
+    @FXML
+    private Region overlayBackground;   // background overlay
+
+    @FXML
     private void initialize() {
         // Create user icon for profile button
         createUserIcon();
@@ -52,45 +74,40 @@ public class ForumController {
         setupNavButtonHovers();
         
         // Create sample Reddit-style posts
-        createRedditStylePost(
-            "r/JavaHelp",
-            "u/javadev123",
-            "2 hours ago",
-            "JavaFX: ClassNotFoundException when running from Eclipse",
-            "This exception usually occurs when module isn't opened/exported. Check your module-info and add 'opens ... to javafx.fxml'.",
-            42,
-            8,
-            false
-        );
+        loadPostsFromDB(); 
 
-        createRedditStylePost(
-            "r/DatabaseHelp",
-            "u/dbadmin",
-            "5 hours ago",
-            "MySQL connection refused on localhost",
-            "Connection refused means MySQL isn't listening. Check if MySQL is running and bound to 0.0.0.0. Verify JDBC URL, username, password.",
-            127,
-            23,
-            true
-        );
-
-        createRedditStylePost(
-            "r/Programming",
-            "u/coder99",
-            "1 day ago",
-            "Best practices for JavaFX application architecture?",
-            "I'm building a JavaFX app and wondering about best practices for structuring controllers, services, and models. Any recommendations?",
-            89,
-            15,
-            false
-        );
-
-        // Add recent posts to sidebar
-        addRecentPost("Elements", "r/QuizPlanetGame", "3h", 45, 12);
-        addRecentPost("Previously Authorized CPT or OPT", "r/f1visa", "5h", 23, 5);
-        addRecentPost("Three-Ingredient Chocolate Banana Pancakes", "r/GifRecipes", "8h", 312, 89);
     }
-    private Node createReplyNode(Reply reply, int level) {
+    public void loadPostsFromDB() {
+        try {
+            PostDAO dao = new PostDAO();
+            List<PostDAO.PostDTO> posts = dao.getAllPosts();
+
+            System.out.println("Controller: posts.size = " + posts.size());
+
+            postContainer.getChildren().clear();
+
+            for (PostDAO.PostDTO post : posts) {
+                System.out.println("Rendering post: " + post.title + " by " + post.author);
+                createRedditStylePost(
+                    post.community,
+                    "u/" + post.author,
+                    post.timeAgo,
+                    post.title,
+                    post.content,
+                    post.upvotes,
+                    post.comments,
+                    post.tag,
+                    false
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error loading DB posts: " + e.getMessage());
+        }
+    }
+
+	private Node createReplyNode(Reply reply, int level) {
 
         HBox row = new HBox(6);
 
@@ -146,7 +163,7 @@ public class ForumController {
      * Creates a post card with upvote/downvote, community info, and action buttons
      */
     private void createRedditStylePost(String community, String author, String timeAgo, 
-                                       String title, String content, int upvotes, int comments, boolean hasJoinButton) {
+                                       String title, String content, int upvotes, int comments, String tag, boolean hasJoinButton) {
         HBox postCard = new HBox(8);
         postCard.setPadding(new Insets(8));
         postCard.setStyle("-fx-background-color: #1a1a1b; -fx-border-color: #343536; -fx-border-width: 0 0 1 0;");
@@ -180,7 +197,12 @@ public class ForumController {
         Label communityLabel = new Label(community);
         communityLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand;");
 
-        Label authorLabel = new Label("Posted by " + author + " • " + timeAgo);
+        // Build author and time label with optional tag
+        String authorTimeText = "Posted by " + author + " • " + timeAgo;
+        if (tag != null && !tag.trim().isEmpty()) {
+            authorTimeText += " • " + tag;
+        }
+        Label authorLabel = new Label(authorTimeText);
         authorLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 12;");
 
         if (hasJoinButton) {
@@ -288,8 +310,78 @@ public class ForumController {
 
     @FXML
     private void onCreatePostClicked() {
-        System.out.println("Create Post button clicked");
-        // later: load create-post page (new scene or dialog)
+        try {
+            // Load the create post FXML
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/edu/northeastern/uniforum/forum/view/create_post.fxml")
+            );
+            Parent dialogContent = loader.load();
+            
+            // Get the CreatePostController to set a reference to this controller for closing
+            CreatePostController dialogController = loader.getController();
+            if (dialogController != null) {
+                dialogController.setParentController(this);
+            }
+
+            // Clear previous dialog content
+            dialogContainer.getChildren().clear();
+            dialogContainer.getChildren().add(dialogContent);
+
+            // Size the dialog relative to the main window (70% of window size)
+            Stage mainStage = (Stage) modalOverlay.getScene().getWindow();
+            double windowWidth = mainStage.getWidth();
+            double windowHeight = mainStage.getHeight();
+            
+            // Set dialog size (70% of window, but cap at max sizes)
+            double dialogWidth = Math.min(windowWidth * 0.7, 650);
+            double dialogHeight = Math.min(windowHeight * 0.75, 550);
+            
+            dialogContainer.setPrefWidth(dialogWidth);
+            dialogContainer.setPrefHeight(dialogHeight);
+            dialogContainer.setMaxWidth(dialogWidth);
+            dialogContainer.setMaxHeight(dialogHeight);
+            
+            // Style the dialog container
+            dialogContainer.setStyle("-fx-background-color: #1a1a1b; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 20, 0, 0, 0);");
+
+            // Show the overlay
+            modalOverlay.setVisible(true);
+            modalOverlay.setManaged(true);
+            
+            // Make overlay fill the entire window
+            StackPane root = (StackPane) modalOverlay.getParent();
+            if (root != null) {
+                modalOverlay.prefWidthProperty().bind(root.widthProperty());
+                modalOverlay.prefHeightProperty().bind(root.heightProperty());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error opening create post dialog: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Closes the modal overlay
+     */
+    public void closeModal() {
+        if (modalOverlay != null) {
+            modalOverlay.setVisible(false);
+            modalOverlay.setManaged(false);
+            dialogContainer.getChildren().clear();
+        }
+    }
+
+    /**
+     * Handles overlay background click to close dialog
+     * Only closes if clicked directly on the background, not on dialog content
+     */
+    @FXML
+    private void onOverlayClicked(javafx.scene.input.MouseEvent event) {
+        // Only close if clicked directly on the overlay background, not on dialog
+        if (event.getTarget() == overlayBackground) {
+            closeModal();
+        }
     }
 
     @FXML

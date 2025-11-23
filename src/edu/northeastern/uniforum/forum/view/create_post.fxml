@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="edu.northeastern.uniforum.forum.controller.CreatePostController" 
+      style="-fx-background-color: #1a1a1b; -fx-padding: 24; -fx-background-radius: 8;" 
+      spacing="16"
+      maxWidth="Infinity" maxHeight="Infinity">
+            
+            <!-- Header: Title, Drafts, and Close -->
+            <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 0 0 16 0;">
+                <Label text="Create post" style="-fx-text-fill: #d7dadc; -fx-font-size: 24; -fx-font-weight: bold;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label text="Drafts" style="-fx-text-fill: #0079d3; -fx-font-size: 14; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#onDraftsClicked" />
+                <Button fx:id="closeButton" text="✕" onAction="#onCloseClicked"
+                        onMouseEntered="#onCloseButtonHover"
+                        onMouseExited="#onCloseButtonExit"
+                        style="-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;" />
+            </HBox>
+
+            <!-- Community and Tags Selection -->
+            <HBox spacing="16" alignment="TOP_LEFT">
+                <!-- Community Selection Dropdown -->
+                <VBox spacing="8" HBox.hgrow="ALWAYS">
+                    <Label text="Select a community*" style="-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;" />
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label text="r/" style="-fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 0 4 0 0;" />
+                        <ComboBox fx:id="communityComboBox" promptText="Choose a community" prefWidth="300" style="-fx-background-color: #272729; -fx-text-fill: #d7dadc;" HBox.hgrow="ALWAYS" />
+                    </HBox>
+                </VBox>
+                
+                <!-- Tags Selection Dropdown -->
+                <VBox spacing="8" HBox.hgrow="ALWAYS">
+                    <Label text="Tags" style="-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;" />
+                    <ComboBox fx:id="tagComboBox" promptText="Select a tag" 
+                              onAction="#onTagSelected"
+                              style="-fx-background-color: #272729; -fx-text-fill: #d7dadc;"
+                              HBox.hgrow="ALWAYS" />
+                </VBox>
+            </HBox>
+            
+            <!-- Tags Display -->
+            <HBox fx:id="tagsContainer" spacing="8" />
+
+            <!-- Title Field -->
+            <VBox spacing="8">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="Title*" style="-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="titleCharCount" text="0/300" style="-fx-text-fill: #818384; -fx-font-size: 12;" />
+                </HBox>
+                <TextField fx:id="titleField" promptText="Title" style="-fx-background-color: #272729; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-padding: 12; -fx-background-radius: 4; -fx-border-color: #343536; -fx-border-radius: 4;" />
+            </VBox>
+
+            <!-- Rich Text Editor Container -->
+            <VBox spacing="0" style="-fx-background-color: #272729; -fx-border-color: #343536; -fx-border-radius: 4; -fx-background-radius: 4;">
+                <!-- Formatting Toolbar -->
+                <HBox spacing="4" style="-fx-padding: 8; -fx-background-color: #1a1a1b; -fx-border-color: transparent transparent #343536 transparent; -fx-border-width: 0 0 1 0; -fx-background-radius: 4 4 0 0;">
+                    <!-- Bold -->
+                    <Button text="B" onAction="#onBoldClicked" 
+                            style="-fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 6 10; -fx-cursor: hand; -fx-min-width: 32; -fx-min-height: 32;" />
+                    <!-- Italic -->
+                    <Button text="i" onAction="#onItalicClicked"
+                            style="-fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-style: italic; -fx-padding: 6 10; -fx-cursor: hand; -fx-min-width: 32; -fx-min-height: 32;" />
+                    <!-- Link -->
+                    <Button text="🔗" onAction="#onLinkClicked"
+                            style="-fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-padding: 6 10; -fx-cursor: hand; -fx-min-width: 32; -fx-min-height: 32;" />
+                </HBox>
+
+                <!-- Text Editor Area -->
+                <TextArea fx:id="bodyTextArea" promptText="Body text (optional)" 
+                          style="-fx-background-color: #272729; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-padding: 16; -fx-border-color: transparent; -fx-background-radius: 0 0 4 4;"
+                          prefRowCount="12" />
+
+            </VBox>
+
+            <!-- Action Buttons -->
+            <HBox alignment="CENTER_RIGHT" spacing="12" style="-fx-padding: 16 0 0 0;">
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="Save Draft" onAction="#onSaveDraftClicked"
+                        style="-fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 10 24; -fx-cursor: hand; -fx-border-color: #343536; -fx-border-width: 1; -fx-border-radius: 4; -fx-background-radius: 4;" />
+                <Button text="Post" onAction="#onPostClicked"
+                        style="-fx-background-color: #0079d3; -fx-text-fill: #ffffff; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 10 24; -fx-cursor: hand; -fx-background-radius: 4;" />
+            </HBox>
+
+</VBox>
+

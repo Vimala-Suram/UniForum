@@ -2,6 +2,8 @@ module Uniforum_Project {
     requires javafx.controls;
     requires javafx.fxml;
 	requires java.desktop;
+	requires java.sql;
+
 
     // Let FXML use reflection on these packages:
     opens application to javafx.graphics, javafx.fxml;
