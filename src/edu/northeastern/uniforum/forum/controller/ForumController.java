@@ -1,11 +1,13 @@
 package edu.northeastern.uniforum.forum.controller;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.northeastern.uniforum.forum.dao.PostDAO;
 import edu.northeastern.uniforum.forum.model.Reply;
 import edu.northeastern.uniforum.forum.util.TimeUtil;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -31,6 +33,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
+import javafx.util.Duration;
 
 
 public class ForumController {
@@ -65,6 +68,9 @@ public class ForumController {
     @FXML
     private Region overlayBackground;   // background overlay
 
+    private List<PostDAO.PostDTO> cachedPosts = new ArrayList<>();
+    private PauseTransition searchDebounce;
+
     @FXML
     private void initialize() {
         // Create user icon for profile button
@@ -72,38 +78,83 @@ public class ForumController {
         
         // Setup navigation button hover effects
         setupNavButtonHovers();
+
+        setupSearchInteractions();
         
         // Create sample Reddit-style posts
         loadPostsFromDB(); 
-
     }
+
+    /**
+     * Configures search field enter key handling and debounce
+     */
+    private void setupSearchInteractions() {
+        if (searchField == null) {
+            return;
+        }
+
+        searchDebounce = new PauseTransition(Duration.millis(400));
+        searchDebounce.setOnFinished(e -> performSearch());
+
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            // Restart debounce timer on every keystroke
+            searchDebounce.stop();
+            searchDebounce.playFromStart();
+        });
+
+        // Trigger search immediately when user presses Enter
+        searchField.setOnAction(e -> performSearch());
+    }
+
     public void loadPostsFromDB() {
         try {
             PostDAO dao = new PostDAO();
             List<PostDAO.PostDTO> posts = dao.getAllPosts();
+            cachedPosts = posts != null ? posts : new ArrayList<>();
 
-            System.out.println("Controller: posts.size = " + posts.size());
+            System.out.println("Controller: posts.size = " + cachedPosts.size());
 
-            postContainer.getChildren().clear();
-
-            for (PostDAO.PostDTO post : posts) {
-                System.out.println("Rendering post: " + post.title + " by " + post.author);
-                createRedditStylePost(
-                    post.community,
-                    "u/" + post.author,
-                    post.timeAgo,
-                    post.title,
-                    post.content,
-                    post.upvotes,
-                    post.comments,
-                    post.tag,
-                    false
-                );
-            }
+            // Re-run current search (or show all if no search input)
+            performSearch();
 
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error loading DB posts: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Renders the given list of posts into the main feed
+     */
+    private void renderPosts(List<PostDAO.PostDTO> postsToRender) {
+        postContainer.getChildren().clear();
+
+        if (postsToRender == null || postsToRender.isEmpty()) {
+            String message = "No posts available.";
+            String keyword = searchField != null ? searchField.getText() : "";
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                message = "No posts match \"" + keyword.trim() + "\".";
+            }
+
+            Label emptyLabel = new Label(message);
+            emptyLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 14; -fx-padding: 24;");
+            postContainer.getChildren().add(emptyLabel);
+            return;
+        }
+
+        for (PostDAO.PostDTO post : postsToRender) {
+            createRedditStylePost(
+                post.postId,
+                post.community,
+                "u/" + post.author,
+                post.timeAgo,
+                post.title,
+                post.content,
+                post.upvotes,
+                post.comments,
+                post.tag,
+                false
+            );
         }
     }
 
@@ -162,11 +213,14 @@ public class ForumController {
     /**
      * Creates a post card with upvote/downvote, community info, and action buttons
      */
-    private void createRedditStylePost(String community, String author, String timeAgo, 
+    private void createRedditStylePost(int postId, String community, String author, String timeAgo, 
                                        String title, String content, int upvotes, int comments, String tag, boolean hasJoinButton) {
         HBox postCard = new HBox(8);
         postCard.setPadding(new Insets(8));
-        postCard.setStyle("-fx-background-color: #1a1a1b; -fx-border-color: #343536; -fx-border-width: 0 0 1 0;");
+        postCard.setStyle("-fx-background-color: #1a1a1b; -fx-border-color: #343536; -fx-border-width: 0 0 1 0; -fx-cursor: hand;");
+        
+        // Make entire post clickable to open detail view
+        postCard.setOnMouseClicked(e -> openPostDetail(postId));
 
         // LEFT: Upvote/Downvote buttons
         VBox voteBox = new VBox(4);
@@ -176,12 +230,14 @@ public class ForumController {
 
         Button upvoteBtn = new Button("▲");
         upvoteBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;");
+        upvoteBtn.setOnMouseClicked(e -> e.consume()); // Prevent opening detail when clicking vote
         
         Label voteCount = new Label(String.valueOf(upvotes));
         voteCount.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;");
         
         Button downvoteBtn = new Button("▼");
         downvoteBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;");
+        downvoteBtn.setOnMouseClicked(e -> e.consume()); // Prevent opening detail when clicking vote
 
         voteBox.getChildren().addAll(upvoteBtn, voteCount, downvoteBtn);
 
@@ -219,10 +275,12 @@ public class ForumController {
         titleLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 18; -fx-font-weight: bold; -fx-cursor: hand; -fx-wrap-text: true;");
         titleLabel.setWrapText(true);
 
-        // Post content
+        // Post content - show only 1 line with ellipsis
         Label contentLabel = new Label(content);
-        contentLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-wrap-text: true;");
-        contentLabel.setWrapText(true);
+        contentLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 14;");
+        contentLabel.setWrapText(false);
+        contentLabel.setMaxWidth(Double.MAX_VALUE);
+        contentLabel.setTextOverrun(javafx.scene.control.OverrunStyle.ELLIPSIS);
 
         // Action buttons row
         HBox actionRow = new HBox(16);
@@ -230,16 +288,91 @@ public class ForumController {
         actionRow.setStyle("-fx-padding: 8 0 0 0;");
 
         Button commentBtn = createActionButton("💬 Comment", String.valueOf(comments));
-        Button shareBtn = createActionButton("Share", "");
-        Button saveBtn = createActionButton("Save", "");
-        Button moreBtn = createActionButton("⋯", "");
+        commentBtn.setOnMouseClicked(e -> {
+            e.consume(); // Prevent opening detail when clicking comment
+            openPostDetail(postId); // Open post detail view with reply functionality
+        });
 
-        actionRow.getChildren().addAll(commentBtn, shareBtn, saveBtn, moreBtn);
+        actionRow.getChildren().addAll(commentBtn);
 
         contentBox.getChildren().addAll(metaRow, titleLabel, contentLabel, actionRow);
 
         postCard.getChildren().addAll(voteBox, contentBox);
         postContainer.getChildren().add(postCard);
+    }
+
+    /**
+     * Opens the post detail popup with replies
+     */
+    private void openPostDetail(int postId) {
+        try {
+            // Get the full post data
+            PostDAO postDAO = new PostDAO();
+            PostDAO.PostDTO postData = null;
+            
+            // Find the post with matching postId
+            var allPosts = postDAO.getAllPosts();
+            for (PostDAO.PostDTO post : allPosts) {
+                if (post.postId == postId) {
+                    postData = post;
+                    break;
+                }
+            }
+            
+            if (postData == null) {
+                System.out.println("Post not found with id: " + postId);
+                return;
+            }
+
+            // Load the post detail FXML
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/edu/northeastern/uniforum/forum/view/post_detail.fxml")
+            );
+            Parent dialogContent = loader.load();
+            
+            // Get the ReplyController to set post data
+            ReplyController replyController = loader.getController();
+            if (replyController != null) {
+                replyController.setParentController(this);
+                replyController.setPostData(postData);
+            }
+
+            // Clear previous dialog content
+            dialogContainer.getChildren().clear();
+            dialogContainer.getChildren().add(dialogContent);
+
+            // Size the dialog relative to the main window (80% of window size)
+            Stage mainStage = (Stage) modalOverlay.getScene().getWindow();
+            double windowWidth = mainStage.getWidth();
+            double windowHeight = mainStage.getHeight();
+            
+            // Set dialog size (70% of window width, 80% of height, but cap at max sizes)
+            double dialogWidth = Math.min(windowWidth * 0.70, 750);
+            double dialogHeight = Math.min(windowHeight * 0.80, 600);
+            
+            dialogContainer.setPrefWidth(dialogWidth);
+            dialogContainer.setPrefHeight(dialogHeight);
+            dialogContainer.setMaxWidth(dialogWidth);
+            dialogContainer.setMaxHeight(dialogHeight);
+            
+            // Style the dialog container
+            dialogContainer.setStyle("-fx-background-color: #1a1a1b; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 20, 0, 0, 0);");
+
+            // Show the overlay
+            modalOverlay.setVisible(true);
+            modalOverlay.setManaged(true);
+            
+            // Make overlay fill the entire window
+            StackPane root = (StackPane) modalOverlay.getParent();
+            if (root != null) {
+                modalOverlay.prefWidthProperty().bind(root.widthProperty());
+                modalOverlay.prefHeightProperty().bind(root.heightProperty());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error opening post detail: " + e.getMessage());
+        }
     }
 
     /**
@@ -303,9 +436,33 @@ public class ForumController {
 
     @FXML
     private void onSearch() {
-        String keyword = searchField.getText();
-        System.out.println("Search clicked: " + keyword);
-        // later: call service to filter posts and re-render postContainer
+        performSearch();
+    }
+
+    private void performSearch() {
+        if (cachedPosts == null) {
+            cachedPosts = new ArrayList<>();
+        }
+
+        String keyword = searchField != null ? searchField.getText() : "";
+        if (keyword == null || keyword.trim().isEmpty()) {
+            renderPosts(cachedPosts);
+            return;
+        }
+
+        String lowered = keyword.trim().toLowerCase();
+        List<PostDAO.PostDTO> filtered = new ArrayList<>();
+
+        for (PostDAO.PostDTO post : cachedPosts) {
+            String title = post.title != null ? post.title.toLowerCase() : "";
+            String content = post.content != null ? post.content.toLowerCase() : "";
+
+            if (title.contains(lowered) || content.contains(lowered)) {
+                filtered.add(post);
+            }
+        }
+
+        renderPosts(filtered);
     }
 
     @FXML
@@ -386,7 +543,7 @@ public class ForumController {
 
     @FXML
     private void onAskClicked() {
-        onSearch();
+        performSearch();
     }
 
     @FXML

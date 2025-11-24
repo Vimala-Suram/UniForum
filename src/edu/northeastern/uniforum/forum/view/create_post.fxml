@@ -12,7 +12,7 @@
       maxWidth="Infinity" maxHeight="Infinity">
             
             <!-- Header: Title, Drafts, and Close -->
-            <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 0 0 16 0;">
+            <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 0 0 8 0;">
                 <Label text="Create post" style="-fx-text-fill: #d7dadc; -fx-font-size: 24; -fx-font-weight: bold;" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Label text="Drafts" style="-fx-text-fill: #0079d3; -fx-font-size: 14; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#onDraftsClicked" />
@@ -21,6 +21,11 @@
                         onMouseExited="#onCloseButtonExit"
                         style="-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;" />
             </HBox>
+
+            <!-- Inline validation message -->
+            <Label fx:id="validationMessage" text=""
+                   style="-fx-text-fill: #ff585b; -fx-font-size: 13;"
+                   visible="false" managed="false"/>
 
             <!-- Community and Tags Selection -->
             <HBox spacing="16" alignment="TOP_LEFT">
@@ -35,7 +40,7 @@
                 
                 <!-- Tags Selection Dropdown -->
                 <VBox spacing="8" HBox.hgrow="ALWAYS">
-                    <Label text="Tags" style="-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;" />
+                    <Label text="Tags*" style="-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;" />
                     <ComboBox fx:id="tagComboBox" promptText="Select a tag" 
                               onAction="#onTagSelected"
                               style="-fx-background-color: #272729; -fx-text-fill: #d7dadc;"
@@ -81,8 +86,6 @@
             <!-- Action Buttons -->
             <HBox alignment="CENTER_RIGHT" spacing="12" style="-fx-padding: 16 0 0 0;">
                 <Region HBox.hgrow="ALWAYS" />
-                <Button text="Save Draft" onAction="#onSaveDraftClicked"
-                        style="-fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 10 24; -fx-cursor: hand; -fx-border-color: #343536; -fx-border-width: 1; -fx-border-radius: 4; -fx-background-radius: 4;" />
                 <Button text="Post" onAction="#onPostClicked"
                         style="-fx-background-color: #0079d3; -fx-text-fill: #ffffff; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 10 24; -fx-cursor: hand; -fx-background-radius: 4;" />
             </HBox>

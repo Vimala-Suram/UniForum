@@ -58,22 +58,11 @@
    	<left>
     <VBox spacing="8" style="-fx-background-color: #0f0f10; -fx-padding: 18; -fx-min-width: 220;">
         
-        
-        
-        <!-- HOME (ACTIVE) -->
+        <!-- HOME -->
         <Button fx:id="homeNavButton" onAction="#onHomeClicked" prefHeight="43.0" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Home" />
         
-        <!-- POPULAR -->
-        <Button onAction="#onPopularClicked" prefHeight="43.0" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Popular" />
-        
         <!-- EXPLORE -->
-        <Button onAction="#onExploreClicked" prefHeight="43.0" prefWidth="175.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Explore" />
-        
-        <!-- ALL -->
-        <Button onAction="#onAllClicked" prefHeight="43.0" prefWidth="175.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="All" />
-        
-        <!-- START COMMUNITY -->
-        <Button onAction="#onStartCommunityClicked" prefHeight="43.0" prefWidth="175.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Start a community" />
+        <Button onAction="#onExploreClicked" prefHeight="43.0" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Explore" />
 
     </VBox>
 </left>
@@ -94,16 +83,6 @@
                     </ScrollPane>
                 </VBox>
                 
-                <!-- Right Sidebar (Recent Posts) -->
-                <VBox fx:id="recentPostsSidebar" spacing="0" style="-fx-background-color: #1a1a1b; -fx-min-width: 312; -fx-max-width: 312; -fx-padding: 16;">
-                    <Label text="RECENT POSTS" style="-fx-text-fill: #818384; -fx-font-size: 10; -fx-font-weight: bold; -fx-letter-spacing: 1; -fx-padding: 0 0 12 0;" />
-                    <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 0 12 0;">
-                        <Button text="Clear" style="-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 12; -fx-cursor: hand; -fx-padding: 4 8;" />
-                    </HBox>
-                    <VBox fx:id="recentPostsContainer" spacing="8">
-                        <!-- Recent posts will be added here -->
-                    </VBox>
-                </VBox>
             </children>
         </HBox>
     </center>

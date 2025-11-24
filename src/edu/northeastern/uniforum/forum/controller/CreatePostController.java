@@ -30,6 +30,9 @@ public class CreatePostController {
     private Label titleCharCount;
 
     @FXML
+    private Label validationMessage;
+
+    @FXML
     private TextArea bodyTextArea;
 
     @FXML
@@ -57,6 +60,9 @@ public class CreatePostController {
 
     @FXML
     private void initialize() {
+        // Hide validation at start
+        showValidationMessage(null);
+
         // Update character count as user types in title field
         titleField.textProperty().addListener((observable, oldValue, newValue) -> {
             int length = newValue != null ? newValue.length() : 0;
@@ -195,23 +201,29 @@ public class CreatePostController {
                 communityComboBox.getSelectionModel().getSelectedItem();
         String title = titleField.getText() != null ? titleField.getText().trim() : "";
         String body  = bodyTextArea.getText() != null ? bodyTextArea.getText().trim() : "";
-        String tag = tags.isEmpty() ? null : tags.get(0);
 
         // Basic validation
         if (selectedCommunity == null) {
-            System.out.println("Please select a community.");
+            showValidationMessage("Please select a community.");
             return;
         }
         if (title.isEmpty()) {
-            System.out.println("Title is required.");
+            showValidationMessage("Title is required.");
             return;
         }
+        if (tags.isEmpty()) {
+            showValidationMessage("Please select at least one tag.");
+            return;
+        }
+        String tag = tags.get(0);
+        showValidationMessage(null);
 
         try {
             int userId = 1; // for now: all posts created by User 1
 
             postDAO.createPost(selectedCommunity.id, userId, title, body, tag);
             System.out.println("Post created successfully.");
+            showValidationMessage(null);
 
             // Refresh main feed if we have a parent controller
             if (parentController != null) {
@@ -225,6 +237,19 @@ public class CreatePostController {
             e.printStackTrace();
             System.out.println("Error creating post: " + e.getMessage());
         }
+    }
+
+    /**
+     * Displays or hides the inline validation message
+     */
+    private void showValidationMessage(String message) {
+        if (validationMessage == null) {
+            return;
+        }
+        boolean hasMessage = message != null && !message.isBlank();
+        validationMessage.setText(hasMessage ? message : "");
+        validationMessage.setVisible(hasMessage);
+        validationMessage.setManaged(hasMessage);
     }
 
     @FXML

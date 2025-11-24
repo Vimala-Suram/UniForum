@@ -15,6 +15,7 @@ import java.sql.SQLException;
 public class PostDAO {
 
     public static class PostDTO {
+        public int postId;
         public String community;
         public String author;
         public String timeAgo;
@@ -29,7 +30,8 @@ public class PostDAO {
         List<PostDTO> list = new ArrayList<>();
 
         String sql = """
-            SELECT p.title,
+            SELECT p.post_id,
+                   p.title,
                    p.content,
                    p.tag,
                    p.number_of_likes,
@@ -49,6 +51,7 @@ public class PostDAO {
 
             while (rs.next()) {
                 PostDTO dto = new PostDTO();
+                dto.postId   = rs.getInt("post_id");
                 dto.title     = rs.getString("title");
                 dto.content   = rs.getString("content");
                 dto.upvotes   = rs.getInt("number_of_likes");
