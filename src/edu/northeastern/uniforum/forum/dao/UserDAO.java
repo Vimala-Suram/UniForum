@@ -19,7 +19,7 @@ public class UserDAO {
     
     // SQL Statement for retrieving a user during login
     private static final String SELECT_USER_BY_USERNAME_SQL = 
-            "SELECT user_id, user_name, PasswordHash, Email FROM Users WHERE user_name = ?";
+            "SELECT user_id, user_name, PasswordHash, Email, LinkedInURL, GitHubURL, Department FROM Users WHERE user_name = ?";
 
     /**
      * Attempts to register a new user in the database.
@@ -78,7 +78,10 @@ public class UserDAO {
                         rs.getInt("user_id"),
                         rs.getString("user_name"),
                         rs.getString("PasswordHash"),
-                        rs.getString("Email")
+                        rs.getString("Email"),
+                        rs.getString("LinkedInURL"),
+                        rs.getString("GitHubURL"),
+                        rs.getString("Department")
                     );
                 }
             }
@@ -233,6 +236,198 @@ public class UserDAO {
             return true;
         } catch (Exception e) {
             System.err.println("Error updating user communities: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates a user's password in the database
+     * @param userId The user ID
+     * @param newPasswordHash The new hashed password
+     * @return true if successful, false otherwise
+     */
+    public boolean updatePassword(int userId, String newPasswordHash) {
+        String sql = "UPDATE Users SET PasswordHash = ? WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, newPasswordHash);
+            statement.setInt(2, userId);
+            
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            System.err.println("Error updating password: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates a user's username in the database
+     * @param userId The user ID
+     * @param newUsername The new username
+     * @return true if successful, false otherwise
+     */
+    public boolean updateUsername(int userId, String newUsername) {
+        String sql = "UPDATE Users SET user_name = ? WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, newUsername);
+            statement.setInt(2, userId);
+            
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            System.err.println("Error updating username: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates a user's email in the database
+     * @param userId The user ID
+     * @param newEmail The new email
+     * @return true if successful, false otherwise
+     */
+    public boolean updateEmail(int userId, String newEmail) {
+        String sql = "UPDATE Users SET Email = ? WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, newEmail);
+            statement.setInt(2, userId);
+            
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            System.err.println("Error updating email: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates a user's LinkedIn URL in the database
+     * @param userId The user ID
+     * @param newLinkedinUrl The new LinkedIn URL
+     * @return true if successful, false otherwise
+     */
+    public boolean updateLinkedinUrl(int userId, String newLinkedinUrl) {
+        String sql = "UPDATE Users SET LinkedInURL = ? WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, newLinkedinUrl.isEmpty() ? null : newLinkedinUrl);
+            statement.setInt(2, userId);
+            
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            System.err.println("Error updating LinkedIn URL: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates a user's GitHub URL in the database
+     * @param userId The user ID
+     * @param newGithubUrl The new GitHub URL
+     * @return true if successful, false otherwise
+     */
+    public boolean updateGithubUrl(int userId, String newGithubUrl) {
+        String sql = "UPDATE Users SET GitHubURL = ? WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, newGithubUrl.isEmpty() ? null : newGithubUrl);
+            statement.setInt(2, userId);
+            
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            System.err.println("Error updating GitHub URL: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates a user's Department in the database
+     * @param userId The user ID
+     * @param newDepartment The new department name
+     * @return true if successful, false otherwise
+     */
+    public boolean updateDepartment(int userId, String newDepartment) {
+        String sql = "UPDATE Users SET Department = ? WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, newDepartment.isEmpty() ? null : newDepartment);
+            statement.setInt(2, userId);
+            
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected == 1;
+        } catch (SQLException e) {
+            System.err.println("Error updating Department: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates multiple user fields at once
+     * @param userId The user ID
+     * @param newUsername The new username (null to skip)
+     * @param newEmail The new email (null to skip)
+     * @param newPasswordHash The new password hash (null to skip)
+     * @param newLinkedinUrl The new LinkedIn URL (null to skip)
+     * @param newGithubUrl The new GitHub URL (null to skip)
+     * @param newDepartment The new department (null to skip)
+     * @return true if successful, false otherwise
+     */
+    public boolean updateUser(int userId, String newUsername, String newEmail, String newPasswordHash,
+                             String newLinkedinUrl, String newGithubUrl, String newDepartment) {
+        try {
+            boolean success = true;
+            
+            // Update username if provided
+            if (newUsername != null && !newUsername.trim().isEmpty()) {
+                success = updateUsername(userId, newUsername.trim()) && success;
+            }
+            
+            // Update email if provided
+            if (newEmail != null && !newEmail.trim().isEmpty()) {
+                success = updateEmail(userId, newEmail.trim()) && success;
+            }
+            
+            // Update password if provided
+            if (newPasswordHash != null && !newPasswordHash.isEmpty()) {
+                success = updatePassword(userId, newPasswordHash) && success;
+            }
+            
+            // Update LinkedIn URL if provided
+            if (newLinkedinUrl != null) {
+                success = updateLinkedinUrl(userId, newLinkedinUrl) && success;
+            }
+            
+            // Update GitHub URL if provided
+            if (newGithubUrl != null) {
+                success = updateGithubUrl(userId, newGithubUrl) && success;
+            }
+            
+            // Update Department if provided
+            if (newDepartment != null) {
+                success = updateDepartment(userId, newDepartment) && success;
+            }
+            
+            return success;
+        } catch (Exception e) {
+            System.err.println("Error updating user: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

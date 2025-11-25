@@ -6,10 +6,10 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Circle?>
 
 <AnchorPane prefHeight="800.0" prefWidth="1400.0" style="-fx-background-color: #F5F5F5;" 
             xmlns="http://javafx.com/fxml/1" 
@@ -24,56 +24,30 @@
     <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: white; -fx-padding: 15 30;" 
           AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" prefHeight="70.0">
         <children>
-            <!-- Logo/Title -->
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <Button onAction="#handleBackAction" style="-fx-background-color: transparent; -fx-text-fill: #3D348B; -fx-font-size: 18px;" 
-                       text="← Back" />
-                <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #3D348B;" text="Settings" />
-            </HBox>
+            <!-- Back Button -->
+            <Button onAction="#handleBackAction" style="-fx-background-color: transparent; -fx-text-fill: #3D348B; -fx-font-size: 18px;" 
+                   text="← Back" />
             
-            <HBox maxWidth="Infinity" />
+            <HBox maxWidth="Infinity" HBox.hgrow="ALWAYS" />
             
-            <!-- User info -->
-            <HBox alignment="CENTER_LEFT" spacing="8.0">
-                <Circle fx:id="profileCircle" radius="18.0" fill="#7678ED" />
-                <Label fx:id="usernameLabel" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #3D348B;" />
-            </HBox>
+            <!-- User info (right corner) -->
+            <Label fx:id="usernameLabel" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #3D348B; -fx-cursor: hand;" 
+                   onMouseClicked="#onUsernameClicked" />
         </children>
     </HBox>
     
     <!-- Main Content Area -->
-    <HBox spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" 
+    <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" 
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="70.0" style="-fx-padding: 20;">
         
-        <!-- Left Sidebar (Rounded) -->
-        <VBox alignment="TOP_CENTER" spacing="15.0" prefWidth="80.0" 
-              style="-fx-background-color: white; -fx-background-radius: 20px; -fx-padding: 20 15;">
-            <children>
-                <Button styleClass="nav-button" text="🏠" onAction="#handleHomeAction" 
-                       prefWidth="50.0" prefHeight="50.0" />
-                <Button styleClass="nav-button" text="👤" onAction="#handleProfileAction" 
-                       prefWidth="50.0" prefHeight="50.0" />
-                <Button styleClass="nav-button" text="👥" onAction="#handleGroupsAction" 
-                       prefWidth="50.0" prefHeight="50.0" />
-                <Button styleClass="nav-button" text="📈" onAction="#handleTrendingAction" 
-                       prefWidth="50.0" prefHeight="50.0" />
-                <Button styleClass="nav-button" text="🔖" onAction="#handleSavedAction" 
-                       prefWidth="50.0" prefHeight="50.0" />
-                
-                <VBox maxHeight="Infinity" />
-                
-                <Button styleClass="nav-button" text="⚙️" 
-                       style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-background-radius: 12px;" 
-                       prefWidth="50.0" prefHeight="50.0" />
-                <Button styleClass="nav-button" text="🚪" onAction="#handleLogoutAction" 
-                       prefWidth="50.0" prefHeight="50.0" />
-            </children>
-        </VBox>
-        
-        <!-- Main Content Card (Rounded) -->
-        <VBox fx:id="mainContentArea" spacing="30.0" maxWidth="Infinity" 
-              style="-fx-background-color: white; -fx-background-radius: 20px; -fx-padding: 40;" 
-              alignment="TOP_LEFT">
+        <!-- ScrollPane to enable scrolling -->
+        <ScrollPane fitToWidth="true" pannable="true" style="-fx-background-color: transparent; -fx-border-color: transparent;" 
+                   HBox.hgrow="ALWAYS">
+            <content>
+                <!-- Main Content Card (Rounded) -->
+                <VBox fx:id="mainContentArea" spacing="30.0" maxWidth="Infinity"
+                      style="-fx-background-color: white; -fx-background-radius: 20px; -fx-padding: 40;" 
+                      alignment="TOP_LEFT">
             <children>
                 <!-- Settings Header -->
                 <VBox spacing="5.0">
@@ -99,6 +73,24 @@
                             <Label style="-fx-font-size: 14px; -fx-text-fill: #3D348B;" text="Email" />
                             <TextField fx:id="emailField" prefHeight="40.0" styleClass="text-field-clean" 
                                      prefWidth="500.0" />
+                        </VBox>
+                        
+                        <VBox spacing="5.0">
+                            <Label style="-fx-font-size: 14px; -fx-text-fill: #3D348B;" text="LinkedIn URL" />
+                            <TextField fx:id="linkedinUrlField" prefHeight="40.0" styleClass="text-field-clean" 
+                                     prefWidth="500.0" promptText="https://linkedin.com/in/yourprofile" />
+                        </VBox>
+                        
+                        <VBox spacing="5.0">
+                            <Label style="-fx-font-size: 14px; -fx-text-fill: #3D348B;" text="GitHub URL" />
+                            <TextField fx:id="githubUrlField" prefHeight="40.0" styleClass="text-field-clean" 
+                                     prefWidth="500.0" promptText="https://github.com/yourusername" />
+                        </VBox>
+                        
+                        <VBox spacing="5.0">
+                            <Label style="-fx-font-size: 14px; -fx-text-fill: #3D348B;" text="Department" />
+                            <TextField fx:id="departmentField" prefHeight="40.0" styleClass="text-field-clean" 
+                                     prefWidth="500.0" promptText="e.g., IS, SES, DAMG, TELE" />
                         </VBox>
                     </VBox>
                 </VBox>
@@ -142,8 +134,10 @@
                 <!-- Message Label -->
                 <Label fx:id="messageLabel" style="-fx-font-weight: bold; -fx-text-fill: #F35B04;"/>
                 
-            </children>
-        </VBox>
+                </children>
+                </VBox>
+            </content>
+        </ScrollPane>
         
     </HBox>
     

@@ -5,24 +5,28 @@ import edu.northeastern.uniforum.forum.model.User;
 import edu.northeastern.uniforum.forum.util.PasswordUtil;
 import edu.northeastern.uniforum.forum.util.SceneManager;
 import javafx.fxml.FXML;
-import javafx.scene.layout.Priority;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Circle;
 
 public class SettingsController {
     
     @FXML private TextField usernameField;
     @FXML private TextField emailField;
+    @FXML private TextField linkedinUrlField;
+    @FXML private TextField githubUrlField;
+    @FXML private TextField departmentField;
     @FXML private PasswordField currentPasswordField;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmPasswordField;
     @FXML private Label messageLabel;
     @FXML private Label usernameLabel;
-    @FXML private Circle profileCircle;
     @FXML private VBox mainContentArea;
     
     private User currentUser;
@@ -41,7 +45,16 @@ public class SettingsController {
             usernameField.setText(user.getUsername());
         }
         if (emailField != null) {
-            emailField.setText(user.getEmail());
+            emailField.setText(user.getEmail() != null ? user.getEmail() : "");
+        }
+        if (linkedinUrlField != null) {
+            linkedinUrlField.setText(user.getLinkedinUrl() != null ? user.getLinkedinUrl() : "");
+        }
+        if (githubUrlField != null) {
+            githubUrlField.setText(user.getGithubUrl() != null ? user.getGithubUrl() : "");
+        }
+        if (departmentField != null) {
+            departmentField.setText(user.getDepartment() != null ? user.getDepartment() : "");
         }
         if (usernameLabel != null) {
             usernameLabel.setText(user.getUsername());
@@ -64,6 +77,9 @@ public class SettingsController {
         
         String newUsername = usernameField.getText().trim();
         String newEmail = emailField.getText().trim();
+        String newLinkedinUrl = linkedinUrlField != null ? linkedinUrlField.getText().trim() : "";
+        String newGithubUrl = githubUrlField != null ? githubUrlField.getText().trim() : "";
+        String newDepartment = departmentField != null ? departmentField.getText().trim() : "";
         String currentPassword = currentPasswordField.getText();
         String newPassword = newPasswordField.getText();
         String confirmPassword = confirmPasswordField.getText();
@@ -84,8 +100,9 @@ public class SettingsController {
             return;
         }
         
-        // If password fields are filled, validate password change
+        // Check if password is being changed
         boolean changingPassword = !currentPassword.isEmpty() || !newPassword.isEmpty() || !confirmPassword.isEmpty();
+        String newPasswordHash = null;
         
         if (changingPassword) {
             if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
@@ -118,18 +135,79 @@ public class SettingsController {
                 }
                 return;
             }
+            
+            // Hash the new password
+            newPasswordHash = PasswordUtil.hashPassword(newPassword);
         }
         
-        // TODO: Update user in database
-        // For now, just show success message
-        if (messageLabel != null) {
-            messageLabel.setText("Settings saved successfully! (Database update not yet implemented)");
+        // Check if fields changed
+        boolean usernameChanged = !newUsername.equals(currentUser.getUsername());
+        boolean emailChanged = !newEmail.equals(currentUser.getEmail());
+        boolean linkedinChanged = !newLinkedinUrl.equals(currentUser.getLinkedinUrl() != null ? currentUser.getLinkedinUrl() : "");
+        boolean githubChanged = !newGithubUrl.equals(currentUser.getGithubUrl() != null ? currentUser.getGithubUrl() : "");
+        boolean departmentChanged = !newDepartment.equals(currentUser.getDepartment() != null ? currentUser.getDepartment() : "");
+        
+        // If username changed, check if new username already exists
+        if (usernameChanged) {
+            User existingUser = userDAO.getUserByUsername(newUsername);
+            if (existingUser != null && existingUser.getUserId() != currentUser.getUserId()) {
+                if (messageLabel != null) {
+                    messageLabel.setText("Username already exists. Please choose a different username.");
+                }
+                return;
+            }
         }
         
-        // Clear password fields
-        currentPasswordField.clear();
-        newPasswordField.clear();
-        confirmPasswordField.clear();
+        // Update user in database
+        boolean updateSuccess = userDAO.updateUser(
+            currentUser.getUserId(),
+            usernameChanged ? newUsername : null,
+            emailChanged ? newEmail : null,
+            newPasswordHash,
+            linkedinChanged ? newLinkedinUrl : null,
+            githubChanged ? newGithubUrl : null,
+            departmentChanged ? newDepartment : null
+        );
+        
+        if (updateSuccess) {
+            // Update current user object with new values
+            String updatedUsername = usernameChanged ? newUsername : currentUser.getUsername();
+            String updatedEmail = emailChanged ? newEmail : currentUser.getEmail();
+            String updatedPasswordHash = newPasswordHash != null ? newPasswordHash : currentUser.getPasswordHash();
+            String updatedLinkedinUrl = linkedinChanged ? newLinkedinUrl : (currentUser.getLinkedinUrl() != null ? currentUser.getLinkedinUrl() : "");
+            String updatedGithubUrl = githubChanged ? newGithubUrl : (currentUser.getGithubUrl() != null ? currentUser.getGithubUrl() : "");
+            String updatedDepartment = departmentChanged ? newDepartment : (currentUser.getDepartment() != null ? currentUser.getDepartment() : "");
+            
+            currentUser = new User(
+                currentUser.getUserId(),
+                updatedUsername,
+                updatedPasswordHash,
+                updatedEmail,
+                updatedLinkedinUrl,
+                updatedGithubUrl,
+                updatedDepartment
+            );
+            
+            // Update username label in UI
+            if (usernameLabel != null) {
+                usernameLabel.setText(updatedUsername);
+            }
+            
+            if (messageLabel != null) {
+                messageLabel.setStyle("-fx-text-fill: #28a745; -fx-font-weight: bold;");
+                messageLabel.setText("Settings saved successfully!");
+            }
+            
+            // Clear password fields
+            currentPasswordField.clear();
+            newPasswordField.clear();
+            confirmPasswordField.clear();
+        } else {
+            if (messageLabel != null) {
+                messageLabel.setStyle("-fx-text-fill: #F35B04; -fx-font-weight: bold;");
+                messageLabel.setText("Error saving settings. Please try again.");
+            }
+        }
     }
     
     @FXML
@@ -139,7 +217,16 @@ public class SettingsController {
             usernameField.setText(currentUser.getUsername());
         }
         if (emailField != null) {
-            emailField.setText(currentUser.getEmail());
+            emailField.setText(currentUser.getEmail() != null ? currentUser.getEmail() : "");
+        }
+        if (linkedinUrlField != null) {
+            linkedinUrlField.setText(currentUser.getLinkedinUrl() != null ? currentUser.getLinkedinUrl() : "");
+        }
+        if (githubUrlField != null) {
+            githubUrlField.setText(currentUser.getGithubUrl() != null ? currentUser.getGithubUrl() : "");
+        }
+        if (departmentField != null) {
+            departmentField.setText(currentUser.getDepartment() != null ? currentUser.getDepartment() : "");
         }
         if (currentPasswordField != null) {
             currentPasswordField.clear();
@@ -191,6 +278,43 @@ public class SettingsController {
     
     @FXML
     private void handleLogoutAction() {
+        handleLogout();
+    }
+    
+    /**
+     * Handles click on username label - shows context menu with logout option
+     */
+    @FXML
+    private void onUsernameClicked(MouseEvent event) {
+        if (currentUser == null) {
+            return;
+        }
+        
+        // Create context menu
+        ContextMenu contextMenu = new ContextMenu();
+        
+        // Logout menu item
+        MenuItem logoutItem = new MenuItem("Logout");
+        logoutItem.setOnAction(e -> {
+            handleLogout();
+        });
+        logoutItem.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 14; -fx-padding: 8 16;");
+        
+        contextMenu.getItems().add(logoutItem);
+        contextMenu.setStyle("-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-radius: 4;");
+        
+        // Show context menu at the click location
+        contextMenu.show(usernameLabel, event.getScreenX(), event.getScreenY());
+    }
+    
+    /**
+     * Handles user logout - navigates back to login page
+     */
+    private void handleLogout() {
+        // Clear current user
+        currentUser = null;
+        
+        // Navigate to login page
         SceneManager.switchToLogin();
     }
 }
