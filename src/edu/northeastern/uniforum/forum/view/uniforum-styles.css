@@ -1,0 +1,163 @@
+/* --- Global Background and Containers --- */
+.anchor-pane {
+    -fx-background-color: #3D348B; /* Dark Primary */
+    -fx-padding: 20px;
+}
+
+/* --- Headers and Titles --- */
+.label {
+    -fx-font-family: "Arial", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+}
+
+#titleLabel {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F18701; /* Warm Accent 1 */
+    -fx-alignment: center;
+}
+
+/* --- Text Fields and Password Fields --- */
+.text-field, .password-field {
+    -fx-background-color: #3D348B, white; /* Dark Primary border, White fill */
+    -fx-background-insets: 0, 0 0 1 0; /* Creates a bottom border effect */
+    -fx-padding: 8px 12px;
+    -fx-text-fill: #3D348B;
+    -fx-border-color: #7678ED; /* Light Accent border */
+    -fx-border-width: 0 0 2px 0;
+    -fx-prompt-text-fill: #A0A0A0;
+}
+
+/* Focus effect for inputs */
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #F7B801; /* Mid-Accent border on focus */
+    -fx-border-width: 0 0 3px 0;
+}
+
+
+/* --- Registration Button (#registerButton) --- */
+.button {
+    -fx-background-color: #7678ED; /* Light Accent */
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 25px;
+    -fx-background-radius: 8px; /* Rounded corners */
+    -fx-cursor: hand;
+}
+
+/* Hover effect for the button */
+.button:hover {
+    -fx-background-color: #F7B801; /* Mid-Accent on hover */
+    -fx-text-fill: #3D348B;
+}
+
+/* --- Message Label (#messageLabel for errors/success) --- */
+#messageLabel {
+    -fx-font-weight: bold;
+    -fx-text-fill: #F35B04; /* Warm Accent 2 for warnings/errors */
+    -fx-alignment: center;
+}
+.text-field-clean {
+    -fx-background-color: transparent; /* No background fill */
+    -fx-border-color: lightgray; 
+    -fx-border-width: 0 0 1px 0; /* Only bottom border */
+    -fx-padding: 8px 0;
+    -fx-text-fill: #3D348B;
+}
+
+/* Focus effect */
+.text-field-clean:focused {
+    -fx-border-color: #7678ED; /* Blue border on focus */
+    -fx-border-width: 0 0 2px 0;
+}
+#leftPanelLabel { /* Assuming you added an fx:id="leftPanelLabel" to the VBox */
+    -fx-text-fill: white;
+}
+
+/* --- Dashboard Styles --- */
+
+/* Search Field */
+.search-field {
+    -fx-background-color: #F5F5F5;
+    -fx-background-radius: 20px;
+    -fx-border-color: #E0E0E0;
+    -fx-border-radius: 20px;
+    -fx-border-width: 1px;
+    -fx-padding: 10px 20px;
+    -fx-font-size: 14px;
+}
+
+.search-field:focused {
+    -fx-border-color: #7678ED;
+    -fx-border-width: 2px;
+}
+
+/* Navigation Buttons */
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12px;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+    -fx-font-size: 20px;
+}
+
+.nav-button:hover {
+    -fx-background-color: #F0F0F0;
+}
+
+.nav-button:pressed {
+    -fx-background-color: #E0E0E0;
+}
+
+/* Icon Button */
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 50%;
+    -fx-cursor: hand;
+    -fx-padding: 8px;
+}
+
+.icon-button:hover {
+    -fx-background-color: #F0F0F0;
+}
+
+/* Course List */
+.course-list {
+    -fx-background-color: transparent;
+    -fx-border-color: #E0E0E0;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+}
+
+.course-list .list-cell {
+    -fx-background-color: white;
+    -fx-padding: 15px;
+    -fx-border-color: #F0F0F0;
+    -fx-border-width: 0 0 1px 0;
+    -fx-font-size: 14px;
+    -fx-text-fill: #3D348B;
+}
+
+.course-list .list-cell:hover {
+    -fx-background-color: #F8F8FF;
+}
+
+.course-list .list-cell:selected {
+    -fx-background-color: #7678ED;
+    -fx-text-fill: white;
+}
+
+/* Rounded Card Background */
+.rounded-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);
+}
+
+/* Settings Section Styles */
+.settings-section {
+    -fx-padding: 20px;
+    -fx-spacing: 15px;
+}

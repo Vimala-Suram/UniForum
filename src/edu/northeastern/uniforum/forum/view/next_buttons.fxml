@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="application.LandingPageController"
+      alignment="TOP_CENTER"
+      spacing="20"
+      style="-fx-background-color: #1a1a1b;">
+
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+
+    <children>
+        <Label text="Student Menu"
+               textFill="white">
+            <font>
+                <Font size="26"/>
+            </font>
+        </Label>
+
+        <Button text="FAQ"
+                fx:id="faqBtn"
+                prefWidth="250"
+                style="-fx-background-color: #0079D3; -fx-text-fill: white;"/>
+
+        <Button text="SoftwareInstallations"
+                fx:id="softwareBtn"
+                prefWidth="250"
+                style="-fx-background-color: #3A3B3C; -fx-text-fill: white;"/>
+
+        <Button text="ProjectDiscussions"
+                fx:id="projectsBtn"
+                prefWidth="250"
+                style="-fx-background-color: #3A3B3C; -fx-text-fill: white;"/>
+
+        <Button text="Assignments"
+                fx:id="assignmentsBtn"
+                prefWidth="250"
+                style="-fx-background-color: #3A3B3C; -fx-text-fill: white;"/>
+
+        <Button text="Resources"
+                fx:id="resourcesBtn"
+                prefWidth="250"
+                style="-fx-background-color: #3A3B3C; -fx-text-fill: white;"/>
+
+        <Button text="ContactTA"
+                fx:id="contactBtn"
+                prefWidth="250"
+                style="-fx-background-color: #3A3B3C; -fx-text-fill: white;"/>
+    </children>
+
+</VBox>

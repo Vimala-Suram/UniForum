@@ -6,7 +6,7 @@
 
 <VBox xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" 
       fx:controller="edu.northeastern.uniforum.forum.controller.ReplyController" 
-      style="-fx-background-color: #1a1a1b; -fx-padding: 8 16 16 16; -fx-background-radius: 8;" 
+      style="-fx-background-color: white; -fx-padding: 8 16 16 16; -fx-background-radius: 8;" 
       spacing="10"
       maxWidth="Infinity" maxHeight="Infinity">
 
@@ -16,21 +16,21 @@
         <Button fx:id="closeButton" text="✕" onAction="#onCloseClicked"
                 onMouseEntered="#onCloseButtonHover"
                 onMouseExited="#onCloseButtonExit"
-                style="-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;" />
+                style="-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;" />
     </HBox>
 
     <!-- Post Content Section -->
-    <VBox fx:id="postContentContainer" spacing="8" style="-fx-padding: 12; -fx-background-color: #272729; -fx-background-radius: 4;">
+    <VBox fx:id="postContentContainer" spacing="8" style="-fx-padding: 12; -fx-background-color: #F5F5F5; -fx-background-radius: 4; -fx-border-color: #E0E0E0; -fx-border-radius: 4;">
         <!-- Post metadata and content will be loaded here -->
     </VBox>
 
     <!-- Replies Section -->
     <VBox spacing="4">
         <HBox alignment="CENTER_LEFT" spacing="12">
-            <Label text="Comments" style="-fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-weight: bold;" />
+            <Label text="Comments" style="-fx-text-fill: #3D348B; -fx-font-size: 14; -fx-font-weight: bold;" />
             <Region HBox.hgrow="ALWAYS" />
             <Button fx:id="addCommentButton" text="Add comment" onAction="#onAddCommentClicked"
-                    style="-fx-background-color: #0079d3; -fx-text-fill: #ffffff; -fx-font-size: 12; -fx-font-weight: bold; -fx-padding: 6 16; -fx-cursor: hand; -fx-background-radius: 4;" />
+                    style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-size: 12; -fx-font-weight: bold; -fx-padding: 6 16; -fx-cursor: hand; -fx-background-radius: 8;" />
         </HBox>
         
         <!-- Replies Container -->
@@ -44,17 +44,17 @@
     </VBox>
 
     <!-- Add Reply Section (Hidden by default) -->
-    <VBox fx:id="replyEditorSection" spacing="8" style="-fx-padding: 12; -fx-background-color: #272729; -fx-background-radius: 4;" visible="false" managed="false">
-        <Label text="Add a comment" style="-fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-weight: bold;" />
+    <VBox fx:id="replyEditorSection" spacing="8" style="-fx-padding: 12; -fx-background-color: #F5F5F5; -fx-background-radius: 4; -fx-border-color: #E0E0E0; -fx-border-radius: 4;" visible="false" managed="false">
+        <Label text="Add a comment" style="-fx-text-fill: #3D348B; -fx-font-size: 14; -fx-font-weight: bold;" />
         <TextArea fx:id="replyTextArea" promptText="What are your thoughts?" 
-                  style="-fx-background-color: #1a1a1b; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-padding: 12; -fx-background-radius: 4; -fx-border-color: #343536; -fx-border-radius: 4;"
+                  style="-fx-background-color: white; -fx-text-fill: #3D348B; -fx-font-size: 14; -fx-padding: 12; -fx-background-radius: 4; -fx-border-color: #E0E0E0; -fx-border-radius: 4; -fx-prompt-text-fill: #888888;"
                   prefRowCount="4" />
         <HBox alignment="CENTER_RIGHT" spacing="12">
             <Region HBox.hgrow="ALWAYS" />
             <Button text="Cancel" onAction="#onCancelClicked"
-                    style="-fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 8 16; -fx-cursor: hand; -fx-border-color: #343536; -fx-border-width: 1; -fx-border-radius: 4; -fx-background-radius: 4;" />
+                    style="-fx-background-color: transparent; -fx-text-fill: #3D348B; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 8 16; -fx-cursor: hand; -fx-border-color: #E0E0E0; -fx-border-width: 1; -fx-border-radius: 4; -fx-background-radius: 4;" />
             <Button text="Comment" onAction="#onPostReplyClicked"
-                    style="-fx-background-color: #0079d3; -fx-text-fill: #ffffff; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 8 24; -fx-cursor: hand; -fx-background-radius: 4;" />
+                    style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 8 24; -fx-cursor: hand; -fx-background-radius: 8;" />
         </HBox>
     </VBox>
 

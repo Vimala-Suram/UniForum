@@ -6,14 +6,21 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class MainUniForum extends Application {
+public class Main extends Application {
+	private static Stage primaryStage;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage stage) {
         try {
+        	primaryStage = stage;
+        	
             Parent root = FXMLLoader.load(
-                getClass().getResource("/edu/northeastern/uniforum/forum/view/forum.fxml")
+                getClass().getResource("/edu/northeastern/uniforum/forum/view/LoginView.fxml")
             );
+            
+            if (root == null) {
+                throw new IllegalStateException("LoginView.fxml not found on classpath");
+            }
 
             Scene scene = new Scene(root, 900, 600);
             scene.getStylesheets().add(
@@ -27,6 +34,10 @@ public class MainUniForum extends Application {
             e.printStackTrace();
         }
     }
+    
+	public static Stage getPrimaryStage() {
+		return primaryStage;
+	}
 
     public static void main(String[] args) {
         launch(args);

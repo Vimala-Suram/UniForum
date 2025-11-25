@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class Database {
 
 	private static final String DB_URL =
-		    "jdbc:sqlite:/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/Project/UniForum/db/uniforum_db.db";
+		    "jdbc:sqlite:db/uniforum_db.db";
 
     private static Connection connection;
 

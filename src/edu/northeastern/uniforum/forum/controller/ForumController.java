@@ -1,11 +1,15 @@
 package edu.northeastern.uniforum.forum.controller;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.northeastern.uniforum.forum.dao.PostDAO;
+import edu.northeastern.uniforum.forum.dao.UserDAO;
 import edu.northeastern.uniforum.forum.model.Reply;
+import edu.northeastern.uniforum.forum.model.User;
+import edu.northeastern.uniforum.forum.util.SceneManager;
 import edu.northeastern.uniforum.forum.util.TimeUtil;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
@@ -48,7 +52,7 @@ public class ForumController {
     private Button createPostButton;
 
     @FXML
-    private Button profileButton;
+    private Label usernameLabel;
 
     @FXML
     private Button homeNavButton;
@@ -70,12 +74,11 @@ public class ForumController {
 
     private List<PostDAO.PostDTO> cachedPosts = new ArrayList<>();
     private PauseTransition searchDebounce;
+    private User currentUser;
+    private final PostDAO postDAO = new PostDAO();
 
     @FXML
     private void initialize() {
-        // Create user icon for profile button
-        createUserIcon();
-        
         // Setup navigation button hover effects
         setupNavButtonHovers();
 
@@ -83,6 +86,18 @@ public class ForumController {
         
         // Create sample Reddit-style posts
         loadPostsFromDB(); 
+    }
+    
+    public void initData(User user) {
+        this.currentUser = user;
+        System.out.println("✓ Forum initialized for: " + user.getUsername());
+        
+        // Set username label
+        if (usernameLabel != null && user != null) {
+            usernameLabel.setText(user.getUsername());
+        }
+        
+        loadPostsFromDB();
     }
 
     /**
@@ -108,11 +123,17 @@ public class ForumController {
 
     public void loadPostsFromDB() {
         try {
-            PostDAO dao = new PostDAO();
-            List<PostDAO.PostDTO> posts = dao.getAllPosts();
-            cachedPosts = posts != null ? posts : new ArrayList<>();
-
-            System.out.println("Controller: posts.size = " + cachedPosts.size());
+            // Default to Home view (posts from joined communities) if user is logged in
+            if (currentUser != null) {
+                List<PostDAO.PostDTO> posts = postDAO.getPostsFromJoinedCommunities(currentUser.getUserId());
+                cachedPosts = posts != null ? posts : new ArrayList<>();
+                System.out.println("Controller: Home posts.size = " + cachedPosts.size());
+            } else {
+                // If no user logged in, show all posts sorted by time
+                List<PostDAO.PostDTO> posts = postDAO.getAllPosts();
+                cachedPosts = posts != null ? posts : new ArrayList<>();
+                System.out.println("Controller: posts.size = " + cachedPosts.size());
+            }
 
             // Re-run current search (or show all if no search input)
             performSearch();
@@ -137,7 +158,7 @@ public class ForumController {
             }
 
             Label emptyLabel = new Label(message);
-            emptyLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 14; -fx-padding: 24;");
+            emptyLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 14; -fx-padding: 24;");
             postContainer.getChildren().add(emptyLabel);
             return;
         }
@@ -146,7 +167,7 @@ public class ForumController {
             createRedditStylePost(
                 post.postId,
                 post.community,
-                "u/" + post.author,
+                post.author,
                 post.timeAgo,
                 post.title,
                 post.content,
@@ -189,7 +210,7 @@ public class ForumController {
 
         Label text = new Label(reply.getText());
         text.setWrapText(true);
-        text.setStyle("-fx-font-size: 12; -fx-text-fill: #333333;");
+        text.setStyle("-fx-font-size: 12; -fx-text-fill: #555555;");
 
         card.getChildren().add(text);
 
@@ -217,7 +238,7 @@ public class ForumController {
                                        String title, String content, int upvotes, int comments, String tag, boolean hasJoinButton) {
         HBox postCard = new HBox(8);
         postCard.setPadding(new Insets(8));
-        postCard.setStyle("-fx-background-color: #1a1a1b; -fx-border-color: #343536; -fx-border-width: 0 0 1 0; -fx-cursor: hand;");
+        postCard.setStyle("-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 0 0 1 0; -fx-cursor: hand; -fx-background-radius: 8;");
         
         // Make entire post clickable to open detail view
         postCard.setOnMouseClicked(e -> openPostDetail(postId));
@@ -228,16 +249,44 @@ public class ForumController {
         voteBox.setPrefWidth(40);
         voteBox.setStyle("-fx-padding: 4 0;");
 
-        Button upvoteBtn = new Button("▲");
-        upvoteBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;");
-        upvoteBtn.setOnMouseClicked(e -> e.consume()); // Prevent opening detail when clicking vote
-        
+        // Create vote count label first so it can be referenced in button handlers
         Label voteCount = new Label(String.valueOf(upvotes));
-        voteCount.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;");
+        voteCount.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 12; -fx-font-weight: bold;");
         
+        // Check user's current vote status
+        int userVote = 0;
+        if (currentUser != null) {
+            try {
+                userVote = postDAO.getUserVote(postId, currentUser.getUserId());
+            } catch (SQLException e) {
+                System.err.println("Error checking user vote: " + e.getMessage());
+            }
+        }
+        
+        // Default styles
+        String defaultUpvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;";
+        String defaultDownvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;";
+        String votedUpvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #7678ED; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8; -fx-font-weight: bold;";
+        String votedDownvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #7678ED; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8; -fx-font-weight: bold;";
+        
+        // Create both buttons first
+        Button upvoteBtn = new Button("▲");
         Button downvoteBtn = new Button("▼");
-        downvoteBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;");
-        downvoteBtn.setOnMouseClicked(e -> e.consume()); // Prevent opening detail when clicking vote
+        
+        // Set initial styles
+        upvoteBtn.setStyle(userVote == 1 ? votedUpvoteStyle : defaultUpvoteStyle);
+        downvoteBtn.setStyle(userVote == -1 ? votedDownvoteStyle : defaultDownvoteStyle);
+        
+        // Set up click handlers after both buttons are created
+        upvoteBtn.setOnMouseClicked(e -> {
+            e.consume(); // Prevent opening detail when clicking vote
+            handleUpvote(postId, voteCount, upvoteBtn, downvoteBtn);
+        });
+        
+        downvoteBtn.setOnMouseClicked(e -> {
+            e.consume(); // Prevent opening detail when clicking vote
+            handleDownvote(postId, voteCount, upvoteBtn, downvoteBtn);
+        });
 
         voteBox.getChildren().addAll(upvoteBtn, voteCount, downvoteBtn);
 
@@ -251,33 +300,64 @@ public class ForumController {
         metaRow.setAlignment(Pos.CENTER_LEFT);
 
         Label communityLabel = new Label(community);
-        communityLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand;");
+        communityLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand;");
 
-        // Build author and time label with optional tag
-        String authorTimeText = "Posted by " + author + " • " + timeAgo;
+        // Build author and time label with clickable author name
+        HBox authorTimeBox = new HBox(4);
+        authorTimeBox.setAlignment(Pos.CENTER_LEFT);
+        
+        Label postedByLabel = new Label("Posted by ");
+        postedByLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
+        
+        Label authorNameLabel = new Label(author);
+        authorNameLabel.setStyle("-fx-text-fill: #7678ED; -fx-font-size: 12; -fx-cursor: hand; -fx-underline: true;");
+        authorNameLabel.setOnMouseClicked(e -> navigateToUserSettings(author));
+        authorNameLabel.setOnMouseEntered(e -> authorNameLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 12; -fx-cursor: hand; -fx-underline: true;"));
+        authorNameLabel.setOnMouseExited(e -> authorNameLabel.setStyle("-fx-text-fill: #7678ED; -fx-font-size: 12; -fx-cursor: hand; -fx-underline: true;"));
+        
+        Label timeLabel = new Label(" • " + timeAgo);
+        timeLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
+        
+        authorTimeBox.getChildren().addAll(postedByLabel, authorNameLabel, timeLabel);
+
+        // Add tag as a styled box if present
         if (tag != null && !tag.trim().isEmpty()) {
-            authorTimeText += " • " + tag;
-        }
-        Label authorLabel = new Label(authorTimeText);
-        authorLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 12;");
-
-        if (hasJoinButton) {
-            Button joinBtn = new Button("Join");
-            joinBtn.setStyle("-fx-background-color: #ff4500; -fx-text-fill: #ffffff; -fx-font-size: 11; -fx-font-weight: bold; -fx-background-radius: 999; -fx-padding: 2 16; -fx-cursor: hand;");
-            metaRow.getChildren().addAll(communityLabel, authorLabel, new Region(), joinBtn);
-            HBox.setHgrow(metaRow.getChildren().get(2), Priority.ALWAYS);
+            HBox tagBox = new HBox(6);
+            tagBox.setAlignment(Pos.CENTER_LEFT);
+            tagBox.setStyle("-fx-background-color: #7678ED; -fx-background-radius: 12; -fx-padding: 4 8;");
+            
+            Label tagLabel = new Label(tag);
+            tagLabel.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 12;");
+            
+            tagBox.getChildren().add(tagLabel);
+            
+            if (hasJoinButton) {
+                Button joinBtn = new Button("Join");
+                joinBtn.setStyle("-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-size: 11; -fx-font-weight: bold; -fx-background-radius: 999; -fx-padding: 2 16; -fx-cursor: hand;");
+                metaRow.getChildren().addAll(communityLabel, authorTimeBox, tagBox, new Region(), joinBtn);
+                HBox.setHgrow(metaRow.getChildren().get(3), Priority.ALWAYS);
+            } else {
+                metaRow.getChildren().addAll(communityLabel, authorTimeBox, tagBox);
+            }
         } else {
-            metaRow.getChildren().addAll(communityLabel, authorLabel);
+            if (hasJoinButton) {
+                Button joinBtn = new Button("Join");
+                joinBtn.setStyle("-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-size: 11; -fx-font-weight: bold; -fx-background-radius: 999; -fx-padding: 2 16; -fx-cursor: hand;");
+                metaRow.getChildren().addAll(communityLabel, authorTimeBox, new Region(), joinBtn);
+                HBox.setHgrow(metaRow.getChildren().get(2), Priority.ALWAYS);
+            } else {
+                metaRow.getChildren().addAll(communityLabel, authorTimeBox);
+            }
         }
 
         // Post title
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 18; -fx-font-weight: bold; -fx-cursor: hand; -fx-wrap-text: true;");
+        titleLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 18; -fx-font-weight: bold; -fx-cursor: hand; -fx-wrap-text: true;");
         titleLabel.setWrapText(true);
 
         // Post content - show only 1 line with ellipsis
         Label contentLabel = new Label(content);
-        contentLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 14;");
+        contentLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 14;");
         contentLabel.setWrapText(false);
         contentLabel.setMaxWidth(Double.MAX_VALUE);
         contentLabel.setTextOverrun(javafx.scene.control.OverrunStyle.ELLIPSIS);
@@ -307,7 +387,6 @@ public class ForumController {
     private void openPostDetail(int postId) {
         try {
             // Get the full post data
-            PostDAO postDAO = new PostDAO();
             PostDAO.PostDTO postData = null;
             
             // Find the post with matching postId
@@ -334,6 +413,7 @@ public class ForumController {
             ReplyController replyController = loader.getController();
             if (replyController != null) {
                 replyController.setParentController(this);
+                replyController.setCurrentUser(currentUser);
                 replyController.setPostData(postData);
             }
 
@@ -356,7 +436,7 @@ public class ForumController {
             dialogContainer.setMaxHeight(dialogHeight);
             
             // Style the dialog container
-            dialogContainer.setStyle("-fx-background-color: #1a1a1b; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 20, 0, 0, 0);");
+            dialogContainer.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 0);");
 
             // Show the overlay
             modalOverlay.setVisible(true);
@@ -383,11 +463,11 @@ public class ForumController {
         btnContent.setAlignment(Pos.CENTER);
 
         Label textLabel = new Label(text);
-        textLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 12;");
+        textLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
 
         if (!count.isEmpty()) {
             Label countLabel = new Label(count);
-            countLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 12;");
+            countLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
             btnContent.getChildren().addAll(textLabel, countLabel);
         } else {
             btnContent.getChildren().add(textLabel);
@@ -397,7 +477,7 @@ public class ForumController {
         btn.setGraphic(btnContent);
         btn.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 4 8;");
         
-        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #272729; -fx-cursor: hand; -fx-padding: 4 8;"));
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #F5F5F5; -fx-cursor: hand; -fx-padding: 4 8; -fx-background-radius: 4;"));
         btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 4 8;"));
 
         return btn;
@@ -409,21 +489,21 @@ public class ForumController {
     private void addRecentPost(String title, String community, String timeAgo, int upvotes, int comments) {
         VBox recentPost = new VBox(4);
         recentPost.setPadding(new Insets(8, 0, 8, 0));
-        recentPost.setStyle("-fx-border-color: #343536; -fx-border-width: 0 0 1 0;");
+        recentPost.setStyle("-fx-border-color: #E0E0E0; -fx-border-width: 0 0 1 0;");
 
         Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand; -fx-wrap-text: true;");
+        titleLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand; -fx-wrap-text: true;");
         titleLabel.setWrapText(true);
 
         HBox metaRow = new HBox(8);
         Label communityLabel = new Label(community);
-        communityLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 11;");
+        communityLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 11;");
 
         Label timeLabel = new Label(timeAgo);
-        timeLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 11;");
+        timeLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 11;");
 
         Label statsLabel = new Label("↑ " + upvotes + " • 💬 " + comments);
-        statsLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 11;");
+        statsLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 11;");
 
         metaRow.getChildren().addAll(communityLabel, timeLabel, new Region(), statsLabel);
         HBox.setHgrow(metaRow.getChildren().get(2), Priority.ALWAYS);
@@ -446,6 +526,8 @@ public class ForumController {
 
         String keyword = searchField != null ? searchField.getText() : "";
         if (keyword == null || keyword.trim().isEmpty()) {
+            // No search keyword - display posts by created_time (newest first)
+            // Posts are already sorted by created_time DESC from the database
             renderPosts(cachedPosts);
             return;
         }
@@ -461,6 +543,9 @@ public class ForumController {
                 filtered.add(post);
             }
         }
+
+        // Sort filtered search results by upvotes (most upvoted first)
+        filtered.sort((a, b) -> Integer.compare(b.upvotes, a.upvotes));
 
         renderPosts(filtered);
     }
@@ -478,6 +563,7 @@ public class ForumController {
             CreatePostController dialogController = loader.getController();
             if (dialogController != null) {
                 dialogController.setParentController(this);
+                dialogController.setCurrentUser(currentUser);
             }
 
             // Clear previous dialog content
@@ -499,7 +585,7 @@ public class ForumController {
             dialogContainer.setMaxHeight(dialogHeight);
             
             // Style the dialog container
-            dialogContainer.setStyle("-fx-background-color: #1a1a1b; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 20, 0, 0, 0);");
+            dialogContainer.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 0);");
 
             // Show the overlay
             modalOverlay.setVisible(true);
@@ -547,14 +633,37 @@ public class ForumController {
     }
 
     @FXML
-    private void onProfileClicked() {
-        System.out.println("Profile button clicked");
-        // later: load profile page (new scene or dialog)
+    private void onProfileClicked(MouseEvent event) {
+        if (currentUser != null) {
+            SceneManager.switchToSettings(currentUser);
+        }
     }
 
     @FXML
     private void onHomeClicked() {
-        System.out.println("Home navigation clicked");
+        if (currentUser == null) {
+            System.out.println("User must be logged in to view home feed.");
+            return;
+        }
+        
+        try {
+            // Get posts from communities the user has joined, sorted by most recent
+            List<PostDAO.PostDTO> posts = postDAO.getPostsFromJoinedCommunities(currentUser.getUserId());
+            cachedPosts = posts != null ? posts : new ArrayList<>();
+            
+            System.out.println("Controller: Home posts.size = " + cachedPosts.size());
+            
+            // Clear search field
+            if (searchField != null) {
+                searchField.clear();
+            }
+            
+            // Render posts
+            renderPosts(cachedPosts);
+        } catch (SQLException e) {
+            System.err.println("Error loading home posts: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -564,7 +673,24 @@ public class ForumController {
 
     @FXML
     private void onExploreClicked() {
-        System.out.println("Explore navigation clicked");
+        try {
+            // Get all posts sorted by number of likes (descending)
+            List<PostDAO.PostDTO> posts = postDAO.getAllPostsSortedByLikes();
+            cachedPosts = posts != null ? posts : new ArrayList<>();
+            
+            System.out.println("Controller: Explore posts.size = " + cachedPosts.size());
+            
+            // Clear search field
+            if (searchField != null) {
+                searchField.clear();
+            }
+            
+            // Render posts
+            renderPosts(cachedPosts);
+        } catch (SQLException e) {
+            System.err.println("Error loading explore posts: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -578,6 +704,129 @@ public class ForumController {
     }
 
     /**
+     * Navigates to settings view for a given username
+     */
+    private void navigateToUserSettings(String username) {
+        UserDAO userDAO = new UserDAO();
+        User user = userDAO.getUserByUsername(username);
+        if (user != null) {
+            SceneManager.switchToSettings(user);
+        } else {
+            System.out.println("User not found: " + username);
+        }
+    }
+
+    /**
+     * Handles upvote button click - checks if user already voted
+     */
+    private void handleUpvote(int postId, Label voteCountLabel, Button upvoteBtn, Button downvoteBtn) {
+        if (currentUser == null) {
+            System.out.println("User must be logged in to vote.");
+            return;
+        }
+        
+        try {
+            boolean voteAdded = postDAO.handleUpvote(postId, currentUser.getUserId());
+            
+            // Get updated vote count from database
+            int newCount = postDAO.getVoteCount(postId);
+            voteCountLabel.setText(String.valueOf(newCount));
+            
+            // Update cached post data
+            for (PostDAO.PostDTO post : cachedPosts) {
+                if (post.postId == postId) {
+                    post.upvotes = newCount;
+                    break;
+                }
+            }
+            
+            // Update button colors based on vote status
+            String defaultUpvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;";
+            String defaultDownvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;";
+            String votedUpvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #7678ED; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8; -fx-font-weight: bold;";
+            String votedDownvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #7678ED; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8; -fx-font-weight: bold;";
+            
+            if (voteAdded) {
+                // Vote was added, check current status
+                int currentVote = postDAO.getUserVote(postId, currentUser.getUserId());
+                if (currentVote == 1) {
+                    upvoteBtn.setStyle(votedUpvoteStyle);
+                    downvoteBtn.setStyle(defaultDownvoteStyle);
+                } else {
+                    upvoteBtn.setStyle(defaultUpvoteStyle);
+                    downvoteBtn.setStyle(defaultDownvoteStyle);
+                }
+            } else {
+                // Vote was removed
+                upvoteBtn.setStyle(defaultUpvoteStyle);
+                downvoteBtn.setStyle(defaultDownvoteStyle);
+            }
+            
+            if (!voteAdded) {
+                System.out.println("Upvote removed (user had already upvoted).");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error handling upvote: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Handles downvote button click - checks if user already voted
+     */
+    private void handleDownvote(int postId, Label voteCountLabel, Button upvoteBtn, Button downvoteBtn) {
+        if (currentUser == null) {
+            System.out.println("User must be logged in to vote.");
+            return;
+        }
+        
+        try {
+            boolean voteAdded = postDAO.handleDownvote(postId, currentUser.getUserId());
+            
+            // Get updated vote count from database
+            int newCount = postDAO.getVoteCount(postId);
+            voteCountLabel.setText(String.valueOf(newCount));
+            
+            // Update cached post data
+            for (PostDAO.PostDTO post : cachedPosts) {
+                if (post.postId == postId) {
+                    post.upvotes = newCount;
+                    break;
+                }
+            }
+            
+            // Update button colors based on vote status
+            String defaultUpvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;";
+            String defaultDownvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8;";
+            String votedUpvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #7678ED; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8; -fx-font-weight: bold;";
+            String votedDownvoteStyle = "-fx-background-color: transparent; -fx-text-fill: #7678ED; -fx-font-size: 16; -fx-cursor: hand; -fx-padding: 2 8; -fx-font-weight: bold;";
+            
+            if (voteAdded) {
+                // Vote was added, check current status
+                int currentVote = postDAO.getUserVote(postId, currentUser.getUserId());
+                if (currentVote == -1) {
+                    upvoteBtn.setStyle(defaultUpvoteStyle);
+                    downvoteBtn.setStyle(votedDownvoteStyle);
+                } else {
+                    upvoteBtn.setStyle(defaultUpvoteStyle);
+                    downvoteBtn.setStyle(defaultDownvoteStyle);
+                }
+            } else {
+                // Vote was removed
+                upvoteBtn.setStyle(defaultUpvoteStyle);
+                downvoteBtn.setStyle(defaultDownvoteStyle);
+            }
+            
+            if (!voteAdded) {
+                System.out.println("Downvote removed (user had already downvoted).");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error handling downvote: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Sets up hover effects for navigation buttons
      */
     private void setupNavButtonHovers() {
@@ -585,8 +834,8 @@ public class ForumController {
         // All buttons now have the same styling (including Home)
         if (homeNavButton != null && homeNavButton.getParent() != null) {
             VBox navContainer = (VBox) homeNavButton.getParent();
-            String normalStyle = "-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;";
-            String hoverStyle = "-fx-alignment: CENTER_LEFT; -fx-background-color: #2a2b2f; -fx-text-fill: #ffffff; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;";
+            String normalStyle = "-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #3D348B; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;";
+            String hoverStyle = "-fx-alignment: CENTER_LEFT; -fx-background-color: #F5F5F5; -fx-text-fill: #3D348B; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;";
             
             for (javafx.scene.Node node : navContainer.getChildren()) {
                 if (node instanceof Button) {
@@ -599,29 +848,4 @@ public class ForumController {
         }
     }
 
-    /**
-     * Creates a user icon and sets it as the graphic for the profile button
-     */
-    private void createUserIcon() {
-        // Create a simple user icon: circle for head + ellipse for body
-        Group userIcon = new Group();
-        
-        // Head (circle)
-        Circle head = new Circle(6);
-        head.setFill(javafx.scene.paint.Color.valueOf("#d7dadc"));
-        head.setTranslateX(12);
-        head.setTranslateY(10);
-        
-        // Body (ellipse for shoulders/torso)
-        Ellipse body = new Ellipse(8, 6);
-        body.setFill(javafx.scene.paint.Color.valueOf("#d7dadc"));
-        body.setTranslateX(12);
-        body.setTranslateY(20);
-        
-        userIcon.getChildren().addAll(head, body);
-        
-        // Set the icon as the button's graphic
-        profileButton.setGraphic(userIcon);
-        profileButton.setText(""); // Remove any text
-    }
 }

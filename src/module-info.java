@@ -3,6 +3,7 @@ module Uniforum_Project {
     requires javafx.fxml;
 	requires java.desktop;
 	requires java.sql;
+	requires jbcrypt;
 
 
     // Let FXML use reflection on these packages:

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="application.CourseSelectionController"
+            style="-fx-background-color: #1a1a1b;">
+
+    <!-- PAGE HEADER -->
+    <top>
+        <HBox spacing="10" BorderPane.alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+            <children>
+                <Label text="Course Selection"
+                       textFill="white">
+                    <font>
+                        <Font size="24"/>
+                    </font>
+                </Label>
+            </children>
+        </HBox>
+    </top>
+
+    <!-- MAIN CONTENT -->
+    <center>
+        <VBox spacing="25">
+            <padding>
+                <Insets top="40" right="40" bottom="40" left="40"/>
+            </padding>
+            <children>
+
+                <!-- Department -->
+                <VBox spacing="8">
+                    <children>
+                        <Label text="Select Department"
+                               textFill="white"
+                               style="-fx-font-size: 14px;"/>
+                        <ComboBox fx:id="deptCombo"
+                                  promptText="Choose Department"
+                                  prefWidth="350"
+                                  style="-fx-background-color: #272729; -fx-text-fill: white;"/>
+                    </children>
+                </VBox>
+
+                <!-- Course -->
+                <VBox spacing="8">
+                    <children>
+                        <Label text="Select Course"
+                               textFill="white"
+                               style="-fx-font-size: 14px;"/>
+                        <ComboBox fx:id="courseCombo"
+                                  promptText="Choose Course"
+                                  prefWidth="350"
+                                  style="-fx-background-color: #272729; -fx-text-fill: white;"/>
+                    </children>
+                </VBox>
+
+            </children>
+        </VBox>
+    </center>
+
+    <!-- BOTTOM BUTTON -->
+    <bottom>
+        <HBox alignment="CENTER_RIGHT">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+            <children>
+                <Button text="Next"
+                        fx:id="nextBtn"
+                        prefWidth="120"
+                        style="-fx-background-color: #0079D3; -fx-text-fill: white;"/>
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>

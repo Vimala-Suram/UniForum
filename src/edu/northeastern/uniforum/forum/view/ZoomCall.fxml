@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+
+<GridPane xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="application.ZoomSchedulerController"
+          hgap="10" vgap="10"
+          style="-fx-background-color: #1a1a1b;">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Meeting Subject:" textFill="white" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <TextField fx:id="subjectField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+    <Label text="Meeting Date:" textFill="white" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <DatePicker fx:id="datePicker" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+    <Label text="Meeting Time (HH:MM):" textFill="white" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+    <TextField fx:id="timeField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+    <Label text="Participant Email:" textFill="white" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+    <TextField fx:id="emailField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+    <Button text="Schedule Zoom Meeting"
+            fx:id="scheduleBtn"
+            style="-fx-background-color: #5F9EA0; -fx-text-fill: white;"
+            GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+</GridPane>

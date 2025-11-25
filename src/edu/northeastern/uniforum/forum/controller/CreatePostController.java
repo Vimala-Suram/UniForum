@@ -1,6 +1,7 @@
 package edu.northeastern.uniforum.forum.controller;
 
 import edu.northeastern.uniforum.forum.dao.PostDAO;
+import edu.northeastern.uniforum.forum.model.User;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -45,6 +46,7 @@ public class CreatePostController {
     private HBox tagsContainer;
 
     private ForumController parentController;
+    private User currentUser;
 
     private final PostDAO postDAO = new PostDAO();
     
@@ -56,6 +58,13 @@ public class CreatePostController {
      */
     public void setParentController(ForumController parentController) {
         this.parentController = parentController;
+    }
+    
+    /**
+     * Sets the current logged-in user
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
     }
 
     @FXML
@@ -72,7 +81,7 @@ public class CreatePostController {
             if (length > 280) {
                 titleCharCount.setStyle("-fx-text-fill: #ff585b; -fx-font-size: 12;");
             } else {
-                titleCharCount.setStyle("-fx-text-fill: #818384; -fx-font-size: 12;");
+                titleCharCount.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
             }
         });
 
@@ -135,7 +144,7 @@ public class CreatePostController {
         for (String tag : tags) {
             HBox tagBox = new HBox(6);
             tagBox.setAlignment(Pos.CENTER_LEFT);
-            tagBox.setStyle("-fx-background-color: #0079d3; -fx-background-radius: 12; -fx-padding: 4 8;");
+            tagBox.setStyle("-fx-background-color: #7678ED; -fx-background-radius: 12; -fx-padding: 4 8;");
             
             Label tagLabel = new Label(tag);
             tagLabel.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 12;");
@@ -219,8 +228,12 @@ public class CreatePostController {
         showValidationMessage(null);
 
         try {
-            int userId = 1; // for now: all posts created by User 1
-
+            if (currentUser == null) {
+                showValidationMessage("User not logged in. Please log in again.");
+                return;
+            }
+            
+            int userId = currentUser.getUserId();
             postDAO.createPost(selectedCommunity.id, userId, title, body, tag);
             System.out.println("Post created successfully.");
             showValidationMessage(null);
@@ -268,12 +281,12 @@ public class CreatePostController {
 
     @FXML
     private void onCloseButtonHover() {
-        closeButton.setStyle("-fx-background-color: #272729; -fx-text-fill: #d7dadc; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
+        closeButton.setStyle("-fx-background-color: #F5F5F5; -fx-text-fill: #3D348B; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
     }
 
     @FXML
     private void onCloseButtonExit() {
-        closeButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
+        closeButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
     }
 
     /**

@@ -19,24 +19,24 @@
 
     <!-- ================= TOP: Navigation Bar ================= -->
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="16" style="-fx-padding: 12 20 12 20; -fx-background-color: #1a1a1b;">
+        <HBox alignment="CENTER_LEFT" spacing="16" style="-fx-padding: 12 20 12 20; -fx-background-color: white;">
             <children>
                 <!-- Left: UniForum Logo/Name -->
-                <Label style="-fx-text-fill: #ffffff; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand;" text="UniForum">
+                <Label style="-fx-text-fill: #3D348B; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand;" text="UniForum">
                     <HBox.margin>
                         <Insets right="20" />
                     </HBox.margin>
                 </Label>
                 
                 <!-- Center: Search Bar with Ask Button -->
-                <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 6 10 6 10; -fx-background-color: #272729; -fx-background-radius: 999; -fx-border-radius: 999; -fx-border-color: linear-gradient(#ff4500, #fdbb2d); -fx-border-width: 2;" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 6 10 6 10; -fx-background-color: #F5F5F5; -fx-background-radius: 999; -fx-border-radius: 999; -fx-border-color: #7678ED; -fx-border-width: 1;" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets left="0" right="20" />
                     </HBox.margin>
                     <children>
-                        <Label style="-fx-text-fill: #ff4500; -fx-font-weight: bold; -fx-background-color: rgba(255,255,255,0.08); -fx-padding: 4 10; -fx-background-radius: 999;" text="UF" />
-                        <TextField fx:id="searchField" onAction="#onSearch" promptText="Find anything" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #d7dadc; -fx-prompt-text-fill: #818384; -fx-font-size: 14;" HBox.hgrow="ALWAYS" />
-                        <Button fx:id="askButton" onAction="#onAskClicked" style="-fx-background-color: #3a3b3c; -fx-text-fill: #ff4500; -fx-font-weight: bold; -fx-background-radius: 999; -fx-padding: 6 18; -fx-cursor: hand;" text="Ask" />
+                        <Label style="-fx-text-fill: #7678ED; -fx-font-weight: bold; -fx-background-color: rgba(118,120,237,0.1); -fx-padding: 4 10; -fx-background-radius: 999;" text="UF" />
+                        <TextField fx:id="searchField" onAction="#onSearch" promptText="Find anything" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #3D348B; -fx-prompt-text-fill: #888888; -fx-font-size: 14;" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="askButton" onAction="#onAskClicked" style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 999; -fx-padding: 6 18; -fx-cursor: hand;" text="Ask" />
                     </children>
                 </HBox>
                 
@@ -44,10 +44,10 @@
                 <HBox alignment="CENTER_RIGHT" spacing="12">
                     <children>
                         <!-- Create Post Button -->
-                        <Button fx:id="createPostButton" onAction="#onCreatePostClicked" style="-fx-background-color: #ff4500; -fx-text-fill: #ffffff; -fx-font-weight: bold; -fx-background-radius: 4; -fx-padding: 8 16 8 16; -fx-cursor: hand;" text="Create Post" />
+                        <Button fx:id="createPostButton" onAction="#onCreatePostClicked" style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 16 8 16; -fx-cursor: hand;" text="Create Post" />
                         
-                        <!-- Profile Button with User Icon -->
-                        <Button fx:id="profileButton" onAction="#onProfileClicked" style="-fx-background-color: transparent; -fx-border-color: #343536; -fx-border-width: 1; -fx-background-radius: 50%; -fx-border-radius: 50%; -fx-min-width: 40; -fx-min-height: 40; -fx-max-width: 40; -fx-max-height: 40; -fx-padding: 0; -fx-cursor: hand;" />
+                        <!-- Username Label -->
+                        <Label fx:id="usernameLabel" style="-fx-text-fill: #3D348B; -fx-font-size: 14; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-color: #F5F5F5; -fx-background-radius: 8; -fx-cursor: hand;" onMouseClicked="#onProfileClicked" />
                     </children>
                 </HBox>
             </children>
@@ -56,13 +56,13 @@
 
     <!-- ================= LEFT: Navigation Drawer ================= -->
    	<left>
-    <VBox spacing="8" style="-fx-background-color: #0f0f10; -fx-padding: 18; -fx-min-width: 220;">
+    <VBox spacing="8" style="-fx-background-color: white; -fx-background-radius: 20px; -fx-padding: 18; -fx-min-width: 220;">
         
         <!-- HOME -->
-        <Button fx:id="homeNavButton" onAction="#onHomeClicked" prefHeight="43.0" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Home" />
+        <Button fx:id="homeNavButton" onAction="#onHomeClicked" prefHeight="43.0" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #3D348B; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Home" />
         
         <!-- EXPLORE -->
-        <Button onAction="#onExploreClicked" prefHeight="43.0" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #d7dadc; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Explore" />
+        <Button onAction="#onExploreClicked" prefHeight="43.0" prefWidth="180.0" style="-fx-alignment: CENTER_LEFT; -fx-background-color: transparent; -fx-text-fill: #3D348B; -fx-background-radius: 12; -fx-padding: 12 16; -fx-font-size: 13; -fx-cursor: hand; -fx-border-color: transparent;" text="Explore" />
 
     </VBox>
 </left>
@@ -70,13 +70,13 @@
     
     <!-- ================= CENTER: Posts + replies ================= -->
     <center>
-        <HBox spacing="0" style="-fx-background-color: #1a1a1b;">
+        <HBox spacing="0" style="-fx-background-color: #F5F5F5;">
             <children>
                 <!-- Main Content Area (Posts Feed) -->
-                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #1a1a1b;">
+                <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: #F5F5F5;">
                     <ScrollPane fitToWidth="true" pannable="true" style="-fx-background-color: transparent;">
                         <content>
-                            <VBox fx:id="postContainer" spacing="8" style="-fx-padding: 16; -fx-background-color: #1a1a1b;">
+                            <VBox fx:id="postContainer" spacing="8" style="-fx-padding: 16; -fx-background-color: #F5F5F5;">
                                 <!-- Post cards will be added here from controller -->
                             </VBox>
                         </content>

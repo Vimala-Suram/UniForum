@@ -2,6 +2,9 @@ package edu.northeastern.uniforum.forum.controller;
 
 import edu.northeastern.uniforum.forum.dao.PostDAO;
 import edu.northeastern.uniforum.forum.dao.ReplyDAO;
+import edu.northeastern.uniforum.forum.dao.UserDAO;
+import edu.northeastern.uniforum.forum.model.User;
+import edu.northeastern.uniforum.forum.util.SceneManager;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -45,6 +48,7 @@ public class ReplyController {
     private ForumController parentController;
     private PostDAO.PostDTO postData;
     private int postId;
+    private User currentUser;
     private final ReplyDAO replyDAO = new ReplyDAO();
 
     /**
@@ -52,6 +56,13 @@ public class ReplyController {
      */
     public void setParentController(ForumController parentController) {
         this.parentController = parentController;
+    }
+    
+    /**
+     * Sets the current logged-in user
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
     }
 
     /**
@@ -75,20 +86,44 @@ public class ReplyController {
         metaRow.setAlignment(Pos.CENTER_LEFT);
 
         Label communityLabel = new Label(postData.community);
-        communityLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 12; -fx-font-weight: bold;");
+        communityLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 12; -fx-font-weight: bold;");
 
-        String authorTimeText = "Posted by u/" + postData.author + " • " + postData.timeAgo;
+        // Build author and time label with clickable author name
+        HBox authorTimeBox = new HBox(4);
+        authorTimeBox.setAlignment(Pos.CENTER_LEFT);
+        
+        Label postedByLabel = new Label("Posted by ");
+        postedByLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
+        
+        Label authorNameLabel = new Label(postData.author);
+        authorNameLabel.setStyle("-fx-text-fill: #7678ED; -fx-font-size: 12; -fx-cursor: hand; -fx-underline: true;");
+        authorNameLabel.setOnMouseClicked(e -> navigateToUserSettings(postData.author));
+        authorNameLabel.setOnMouseEntered(e -> authorNameLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 12; -fx-cursor: hand; -fx-underline: true;"));
+        authorNameLabel.setOnMouseExited(e -> authorNameLabel.setStyle("-fx-text-fill: #7678ED; -fx-font-size: 12; -fx-cursor: hand; -fx-underline: true;"));
+        
+        Label timeLabel = new Label(" • " + postData.timeAgo);
+        timeLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 12;");
+        
+        authorTimeBox.getChildren().addAll(postedByLabel, authorNameLabel, timeLabel);
+        
+        // Add tag if present
         if (postData.tag != null && !postData.tag.trim().isEmpty()) {
-            authorTimeText += " • " + postData.tag;
+            HBox tagBox = new HBox(6);
+            tagBox.setAlignment(Pos.CENTER_LEFT);
+            tagBox.setStyle("-fx-background-color: #7678ED; -fx-background-radius: 12; -fx-padding: 4 8;");
+            
+            Label tagLabel = new Label(postData.tag);
+            tagLabel.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 12;");
+            
+            tagBox.getChildren().add(tagLabel);
+            metaRow.getChildren().addAll(communityLabel, authorTimeBox, tagBox);
+        } else {
+            metaRow.getChildren().addAll(communityLabel, authorTimeBox);
         }
-        Label authorLabel = new Label(authorTimeText);
-        authorLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 12;");
-
-        metaRow.getChildren().addAll(communityLabel, authorLabel);
 
         // Post title
         Label titleLabel = new Label(postData.title);
-        titleLabel.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 20; -fx-font-weight: bold; -fx-wrap-text: true;");
+        titleLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 20; -fx-font-weight: bold; -fx-wrap-text: true;");
         titleLabel.setWrapText(true);
 
         // Post content - show full description with hyperlink support
@@ -108,7 +143,7 @@ public class ReplyController {
 
             if (replies.isEmpty()) {
                 Label noRepliesLabel = new Label("No comments yet. Be the first to comment!");
-                noRepliesLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 14; -fx-padding: 16;");
+                noRepliesLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 14; -fx-padding: 16;");
                 repliesContainer.getChildren().add(noRepliesLabel);
             } else {
                 for (ReplyDAO.ReplyDTO reply : replies) {
@@ -126,7 +161,7 @@ public class ReplyController {
      */
     private void createReplyCard(ReplyDAO.ReplyDTO reply) {
         HBox replyCard = new HBox(8);
-        replyCard.setStyle("-fx-background-color: #1a1a1b; -fx-background-radius: 4; -fx-padding: 12;");
+        replyCard.setStyle("-fx-background-color: white; -fx-background-radius: 4; -fx-padding: 12; -fx-border-color: #E0E0E0; -fx-border-radius: 4;");
 
         // Vote buttons (optional - can be added later)
         VBox voteBox = new VBox(4);
@@ -137,14 +172,25 @@ public class ReplyController {
         VBox contentBox = new VBox(4);
         contentBox.setPadding(new Insets(0, 0, 0, 0));
 
-        // Author and time
-        Label authorLabel = new Label("u/" + reply.author + " • " + reply.timeAgo);
-        authorLabel.setStyle("-fx-text-fill: #818384; -fx-font-size: 11;");
+        // Author and time with clickable author name
+        HBox authorTimeBox = new HBox(4);
+        authorTimeBox.setAlignment(Pos.CENTER_LEFT);
+        
+        Label authorNameLabel = new Label(reply.author);
+        authorNameLabel.setStyle("-fx-text-fill: #7678ED; -fx-font-size: 11; -fx-cursor: hand; -fx-underline: true;");
+        authorNameLabel.setOnMouseClicked(e -> navigateToUserSettings(reply.author));
+        authorNameLabel.setOnMouseEntered(e -> authorNameLabel.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 11; -fx-cursor: hand; -fx-underline: true;"));
+        authorNameLabel.setOnMouseExited(e -> authorNameLabel.setStyle("-fx-text-fill: #7678ED; -fx-font-size: 11; -fx-cursor: hand; -fx-underline: true;"));
+        
+        Label timeLabel = new Label(" • " + reply.timeAgo);
+        timeLabel.setStyle("-fx-text-fill: #555555; -fx-font-size: 11;");
+        
+        authorTimeBox.getChildren().addAll(authorNameLabel, timeLabel);
 
         // Reply content with hyperlink support
         TextFlow contentFlow = createTextFlowWithLinks(reply.content);
 
-        contentBox.getChildren().addAll(authorLabel, contentFlow);
+        contentBox.getChildren().addAll(authorTimeBox, contentFlow);
         replyCard.getChildren().addAll(voteBox, contentBox);
         repliesContainer.getChildren().add(replyCard);
     }
@@ -154,7 +200,7 @@ public class ReplyController {
      */
     private TextFlow createTextFlowWithLinks(String text) {
         TextFlow textFlow = new TextFlow();
-        textFlow.setStyle("-fx-text-fill: #d7dadc; -fx-font-size: 14;");
+        textFlow.setStyle("-fx-text-fill: #555555; -fx-font-size: 14;");
         textFlow.setLineSpacing(2.0);
         
         if (text == null || text.isEmpty()) {
@@ -176,7 +222,7 @@ public class ReplyController {
             if (matcher.start() > lastEnd) {
                 String beforeText = text.substring(lastEnd, matcher.start());
                 Text beforeTextNode = new Text(beforeText);
-                beforeTextNode.setStyle("-fx-fill: #d7dadc; -fx-font-size: 14;");
+                beforeTextNode.setStyle("-fx-fill: #555555; -fx-font-size: 14;");
                 textFlow.getChildren().add(beforeTextNode);
             }
 
@@ -208,14 +254,14 @@ public class ReplyController {
         if (lastEnd < text.length()) {
             String afterText = text.substring(lastEnd);
             Text afterTextNode = new Text(afterText);
-            afterTextNode.setStyle("-fx-fill: #d7dadc; -fx-font-size: 14;");
+            afterTextNode.setStyle("-fx-fill: #555555; -fx-font-size: 14;");
             textFlow.getChildren().add(afterTextNode);
         }
 
         // If no URLs were found, add the entire text as regular text
         if (textFlow.getChildren().isEmpty()) {
             Text textNode = new Text(text);
-            textNode.setStyle("-fx-fill: #d7dadc; -fx-font-size: 14;");
+            textNode.setStyle("-fx-fill: #555555; -fx-font-size: 14;");
             textFlow.getChildren().add(textNode);
         }
 
@@ -232,7 +278,12 @@ public class ReplyController {
         }
 
         try {
-            int userId = 1; // For now: all replies by User 1
+            if (currentUser == null) {
+                System.out.println("User not logged in. Please log in again.");
+                return;
+            }
+            
+            int userId = currentUser.getUserId();
             replyDAO.createReply(postId, userId, replyText);
             System.out.println("Reply posted successfully.");
 
@@ -294,11 +345,24 @@ public class ReplyController {
 
     @FXML
     private void onCloseButtonHover() {
-        closeButton.setStyle("-fx-background-color: #272729; -fx-text-fill: #d7dadc; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
+        closeButton.setStyle("-fx-background-color: #F5F5F5; -fx-text-fill: #3D348B; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
     }
 
     @FXML
     private void onCloseButtonExit() {
-        closeButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #818384; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
+        closeButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #555555; -fx-font-size: 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 4 8; -fx-min-width: 32; -fx-min-height: 32;");
+    }
+    
+    /**
+     * Navigates to settings view for a given username
+     */
+    private void navigateToUserSettings(String username) {
+        UserDAO userDAO = new UserDAO();
+        User user = userDAO.getUserByUsername(username);
+        if (user != null) {
+            SceneManager.switchToSettings(user);
+        } else {
+            System.out.println("User not found: " + username);
+        }
     }
 }
