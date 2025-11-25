@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.util.List;
+import java.util.ArrayList;
 
 public class UserDAO {
     
@@ -84,5 +86,155 @@ public class UserDAO {
             System.err.println("Error fetching user: " + e.getMessage());
         }
         return null; // User not found or error occurred
+    }
+
+    /**
+     * Checks if a user has joined any communities
+     * @param userId The user ID to check
+     * @return true if user has joined at least one community, false otherwise
+     */
+    public boolean hasUserJoinedCommunities(int userId) {
+        String sql = "SELECT COUNT(*) FROM Community_User WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checking user communities: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Joins a user to multiple communities
+     * @param userId The user ID
+     * @param communityIds List of community IDs to join
+     * @return true if successful, false otherwise
+     */
+    public boolean joinUserToCommunities(int userId, List<Integer> communityIds) {
+        if (communityIds == null || communityIds.isEmpty()) {
+            return false;
+        }
+
+        String sql = "INSERT OR IGNORE INTO Community_User (community_id, user_id) VALUES (?, ?)";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            for (Integer communityId : communityIds) {
+                statement.setInt(1, communityId);
+                statement.setInt(2, userId);
+                statement.addBatch();
+            }
+            
+            statement.executeBatch();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error joining user to communities: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Gets all community IDs that a user has joined
+     * @param userId The user ID
+     * @return List of community IDs the user has joined
+     */
+    public List<Integer> getUserCommunities(int userId) {
+        List<Integer> communityIds = new ArrayList<>();
+        String sql = "SELECT community_id FROM Community_User WHERE user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    communityIds.add(rs.getInt("community_id"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting user communities: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return communityIds;
+    }
+
+    /**
+     * Removes a user from multiple communities
+     * @param userId The user ID
+     * @param communityIds List of community IDs to remove
+     * @return true if successful, false otherwise
+     */
+    public boolean removeUserFromCommunities(int userId, List<Integer> communityIds) {
+        if (communityIds == null || communityIds.isEmpty()) {
+            return true; // Nothing to remove
+        }
+
+        String sql = "DELETE FROM Community_User WHERE community_id = ? AND user_id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            for (Integer communityId : communityIds) {
+                statement.setInt(1, communityId);
+                statement.setInt(2, userId);
+                statement.addBatch();
+            }
+            
+            statement.executeBatch();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error removing user from communities: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Updates user's communities - removes old ones and adds new ones
+     * @param userId The user ID
+     * @param newCommunityIds List of community IDs the user should be in
+     * @return true if successful, false otherwise
+     */
+    public boolean updateUserCommunities(int userId, List<Integer> newCommunityIds) {
+        try {
+            // Get current communities
+            List<Integer> currentCommunities = getUserCommunities(userId);
+            
+            // Find communities to remove (in current but not in new)
+            List<Integer> toRemove = new ArrayList<>();
+            for (Integer currentId : currentCommunities) {
+                if (!newCommunityIds.contains(currentId)) {
+                    toRemove.add(currentId);
+                }
+            }
+            
+            // Find communities to add (in new but not in current)
+            List<Integer> toAdd = new ArrayList<>();
+            for (Integer newId : newCommunityIds) {
+                if (!currentCommunities.contains(newId)) {
+                    toAdd.add(newId);
+                }
+            }
+            
+            // Remove old communities
+            if (!toRemove.isEmpty()) {
+                removeUserFromCommunities(userId, toRemove);
+            }
+            
+            // Add new communities
+            if (!toAdd.isEmpty()) {
+                joinUserToCommunities(userId, toAdd);
+            }
+            
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error updating user communities: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }

@@ -2,8 +2,10 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -11,8 +13,8 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="application.CourseSelectionController"
-            style="-fx-background-color: #1a1a1b;">
+            fx:controller="edu.northeastern.uniforum.forum.controller.CourseSelectionController"
+            style="-fx-background-color: white;">
 
     <!-- PAGE HEADER -->
     <top>
@@ -22,10 +24,7 @@
             </padding>
             <children>
                 <Label text="Course Selection"
-                       textFill="white">
-                    <font>
-                        <Font size="24"/>
-                    </font>
+                       style="-fx-text-fill: #3D348B; -fx-font-size: 24; -fx-font-weight: bold;">
                 </Label>
             </children>
         </HBox>
@@ -33,35 +32,53 @@
 
     <!-- MAIN CONTENT -->
     <center>
-        <VBox spacing="25">
+        <VBox spacing="20">
             <padding>
                 <Insets top="40" right="40" bottom="40" left="40"/>
             </padding>
             <children>
 
-                <!-- Department -->
+                <!-- Instructions -->
+                <Label text="Select a department, then choose courses. Click checkboxes to select multiple courses. Your current selections are shown below. You can add or remove courses."
+                       style="-fx-text-fill: #3D348B; -fx-font-size: 14px; -fx-font-weight: bold;"
+                       wrapText="true"/>
+
+                <!-- Department Selection -->
                 <VBox spacing="8">
                     <children>
                         <Label text="Select Department"
-                               textFill="white"
-                               style="-fx-font-size: 14px;"/>
+                               style="-fx-text-fill: #3D348B; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                         <ComboBox fx:id="deptCombo"
                                   promptText="Choose Department"
                                   prefWidth="350"
-                                  style="-fx-background-color: #272729; -fx-text-fill: white;"/>
+                                  style="-fx-background-color: #F5F5F5; -fx-text-fill: #3D348B; -fx-border-color: #E0E0E0; -fx-border-radius: 4;"/>
                     </children>
                 </VBox>
 
-                <!-- Course -->
+                <!-- Courses List for Selected Department -->
                 <VBox spacing="8">
                     <children>
-                        <Label text="Select Course"
-                               textFill="white"
-                               style="-fx-font-size: 14px;"/>
-                        <ComboBox fx:id="courseCombo"
-                                  promptText="Choose Course"
-                                  prefWidth="350"
-                                  style="-fx-background-color: #272729; -fx-text-fill: white;"/>
+                        <Label text="Available Courses:"
+                               style="-fx-text-fill: #3D348B; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <ScrollPane fitToWidth="true" prefHeight="300" style="-fx-background-color: transparent;">
+                            <content>
+                                <ListView fx:id="courseListView"
+                                          prefWidth="600"
+                                          style="-fx-background-color: #F5F5F5; -fx-border-color: #E0E0E0; -fx-border-radius: 4;"/>
+                            </content>
+                        </ScrollPane>
+                    </children>
+                </VBox>
+                
+                <!-- Selected Courses Display -->
+                <VBox spacing="8">
+                    <children>
+                        <Label text="Selected Courses:"
+                               style="-fx-text-fill: #3D348B; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <Label fx:id="selectedCoursesLabel"
+                               text="No courses selected"
+                               style="-fx-text-fill: #555555; -fx-font-size: 12px; -fx-background-color: #F5F5F5; -fx-padding: 8; -fx-background-radius: 4;"
+                               wrapText="true"/>
                     </children>
                 </VBox>
 
@@ -76,10 +93,10 @@
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
             <children>
-                <Button text="Next"
+                <Button text="Continue"
                         fx:id="nextBtn"
                         prefWidth="120"
-                        style="-fx-background-color: #0079D3; -fx-text-fill: white;"/>
+                        style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20;"/>
             </children>
         </HBox>
     </bottom>

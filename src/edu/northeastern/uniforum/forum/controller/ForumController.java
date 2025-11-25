@@ -19,6 +19,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -37,6 +38,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.util.Duration;
 
 
@@ -72,10 +75,23 @@ public class ForumController {
     @FXML
     private Region overlayBackground;   // background overlay
 
+    @FXML
+    private HBox filterStrip;   // filter strip for Explore section
+
+    @FXML
+    private ComboBox<String> communityFilter;   // community filter dropdown
+
+    @FXML
+    private ComboBox<String> tagFilter;   // tag filter dropdown
+
+    @FXML
+    private ComboBox<String> sortByFilter;   // sort by dropdown
+
     private List<PostDAO.PostDTO> cachedPosts = new ArrayList<>();
     private PauseTransition searchDebounce;
     private User currentUser;
     private final PostDAO postDAO = new PostDAO();
+    private boolean isExploreView = false;   // track if we're on Explore view
 
     @FXML
     private void initialize() {
@@ -84,8 +100,51 @@ public class ForumController {
 
         setupSearchInteractions();
         
+        // Setup filter controls
+        setupFilterControls();
+        
         // Create sample Reddit-style posts
         loadPostsFromDB(); 
+    }
+    
+    /**
+     * Sets up filter controls for Explore section
+     */
+    private void setupFilterControls() {
+        // Populate community dropdown
+        try {
+            List<PostDAO.CommunityDTO> communities = postDAO.getAllCommunities();
+            if (communityFilter != null) {
+                communityFilter.getItems().clear();
+                communityFilter.getItems().add("All Communities");
+                for (PostDAO.CommunityDTO comm : communities) {
+                    communityFilter.getItems().add(comm.name);
+                }
+                communityFilter.setOnAction(e -> applyFilters());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error loading communities for filter: " + e.getMessage());
+        }
+        
+        // Populate tag dropdown
+        try {
+            List<String> tags = postDAO.getAllTags();
+            if (tagFilter != null) {
+                tagFilter.getItems().clear();
+                tagFilter.getItems().add("All Tags");
+                tagFilter.getItems().addAll(tags);
+                tagFilter.setOnAction(e -> applyFilters());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error loading tags for filter: " + e.getMessage());
+        }
+        
+        // Setup sort by dropdown
+        if (sortByFilter != null) {
+            sortByFilter.getItems().addAll("Most Liked", "Least Liked", "Latest", "Oldest");
+            sortByFilter.setValue("Most Liked"); // Default sort
+            sortByFilter.setOnAction(e -> applyFilters());
+        }
     }
     
     public void initData(User user) {
@@ -121,6 +180,9 @@ public class ForumController {
         searchField.setOnAction(e -> performSearch());
     }
 
+    /**
+     * Loads posts from database (used on initial load and refresh)
+     */
     public void loadPostsFromDB() {
         try {
             // Default to Home view (posts from joined communities) if user is logged in
@@ -330,9 +392,9 @@ public class ForumController {
             tagLabel.setStyle("-fx-text-fill: #ffffff; -fx-font-size: 12;");
             
             tagBox.getChildren().add(tagLabel);
-            
-            if (hasJoinButton) {
-                Button joinBtn = new Button("Join");
+
+        if (hasJoinButton) {
+            Button joinBtn = new Button("Join");
                 joinBtn.setStyle("-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-size: 11; -fx-font-weight: bold; -fx-background-radius: 999; -fx-padding: 2 16; -fx-cursor: hand;");
                 metaRow.getChildren().addAll(communityLabel, authorTimeBox, tagBox, new Region(), joinBtn);
                 HBox.setHgrow(metaRow.getChildren().get(3), Priority.ALWAYS);
@@ -525,27 +587,112 @@ public class ForumController {
         }
 
         String keyword = searchField != null ? searchField.getText() : "";
-        if (keyword == null || keyword.trim().isEmpty()) {
-            // No search keyword - display posts by created_time (newest first)
-            // Posts are already sorted by created_time DESC from the database
-            renderPosts(cachedPosts);
-            return;
+        List<PostDAO.PostDTO> filtered = new ArrayList<>(cachedPosts);
+        
+        // Apply search keyword filter if present
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String lowered = keyword.trim().toLowerCase();
+            filtered.removeIf(post -> {
+                String title = post.title != null ? post.title.toLowerCase() : "";
+                String content = post.content != null ? post.content.toLowerCase() : "";
+                return !title.contains(lowered) && !content.contains(lowered);
+            });
         }
-
-        String lowered = keyword.trim().toLowerCase();
-        List<PostDAO.PostDTO> filtered = new ArrayList<>();
-
-        for (PostDAO.PostDTO post : cachedPosts) {
-            String title = post.title != null ? post.title.toLowerCase() : "";
-            String content = post.content != null ? post.content.toLowerCase() : "";
-
-            if (title.contains(lowered) || content.contains(lowered)) {
-                filtered.add(post);
+        
+        // If on Explore view, apply additional filters (community, tag, sort)
+        if (isExploreView) {
+            // Filter by community
+            if (communityFilter != null && communityFilter.getValue() != null 
+                && !communityFilter.getValue().equals("All Communities")) {
+                String selectedCommunity = communityFilter.getValue();
+                filtered.removeIf(post -> !post.community.equals(selectedCommunity));
+            }
+            
+            // Filter by tag
+            if (tagFilter != null && tagFilter.getValue() != null 
+                && !tagFilter.getValue().equals("All Tags")) {
+                String selectedTag = tagFilter.getValue();
+                filtered.removeIf(post -> post.tag == null || !post.tag.equals(selectedTag));
+            }
+            
+            // Sort posts
+            if (sortByFilter != null && sortByFilter.getValue() != null) {
+                String sortOption = sortByFilter.getValue();
+                switch (sortOption) {
+                    case "Most Liked":
+                        filtered.sort((a, b) -> Integer.compare(b.upvotes, a.upvotes));
+                        break;
+                    case "Least Liked":
+                        filtered.sort((a, b) -> Integer.compare(a.upvotes, b.upvotes));
+                        break;
+                    case "Latest":
+                        // For latest, reload from DB with time sorting
+                        try {
+                            List<PostDAO.PostDTO> timeSorted = postDAO.getAllPosts();
+                            // Apply all filters to time-sorted list
+                            if (keyword != null && !keyword.trim().isEmpty()) {
+                                String lowered = keyword.trim().toLowerCase();
+                                timeSorted.removeIf(post -> {
+                                    String title = post.title != null ? post.title.toLowerCase() : "";
+                                    String content = post.content != null ? post.content.toLowerCase() : "";
+                                    return !title.contains(lowered) && !content.contains(lowered);
+                                });
+                            }
+                            if (communityFilter != null && communityFilter.getValue() != null 
+                                && !communityFilter.getValue().equals("All Communities")) {
+                                String selectedCommunity = communityFilter.getValue();
+                                timeSorted.removeIf(post -> !post.community.equals(selectedCommunity));
+                            }
+                            if (tagFilter != null && tagFilter.getValue() != null 
+                                && !tagFilter.getValue().equals("All Tags")) {
+                                String selectedTag = tagFilter.getValue();
+                                timeSorted.removeIf(post -> post.tag == null || !post.tag.equals(selectedTag));
+                            }
+                            filtered = timeSorted; // Already sorted DESC by time
+                        } catch (SQLException e) {
+                            System.err.println("Error reloading posts for latest sort: " + e.getMessage());
+                        }
+                        break;
+                    case "Oldest":
+                        // For oldest, reload from DB and reverse
+                        try {
+                            List<PostDAO.PostDTO> timeSorted = postDAO.getAllPosts();
+                            // Apply all filters to time-sorted list
+                            if (keyword != null && !keyword.trim().isEmpty()) {
+                                String lowered = keyword.trim().toLowerCase();
+                                timeSorted.removeIf(post -> {
+                                    String title = post.title != null ? post.title.toLowerCase() : "";
+                                    String content = post.content != null ? post.content.toLowerCase() : "";
+                                    return !title.contains(lowered) && !content.contains(lowered);
+                                });
+                            }
+                            if (communityFilter != null && communityFilter.getValue() != null 
+                                && !communityFilter.getValue().equals("All Communities")) {
+                                String selectedCommunity = communityFilter.getValue();
+                                timeSorted.removeIf(post -> !post.community.equals(selectedCommunity));
+                            }
+                            if (tagFilter != null && tagFilter.getValue() != null 
+                                && !tagFilter.getValue().equals("All Tags")) {
+                                String selectedTag = tagFilter.getValue();
+                                timeSorted.removeIf(post -> post.tag == null || !post.tag.equals(selectedTag));
+                            }
+                            java.util.Collections.reverse(timeSorted); // Reverse to get oldest first
+                            filtered = timeSorted;
+                        } catch (SQLException e) {
+                            System.err.println("Error reloading posts for oldest sort: " + e.getMessage());
+                        }
+                        break;
+                }
+            } else {
+                // Default: sort by upvotes (most liked first) if no sort selected
+                filtered.sort((a, b) -> Integer.compare(b.upvotes, a.upvotes));
+            }
+        } else {
+            // On Home view, if search keyword exists, sort by upvotes
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                filtered.sort((a, b) -> Integer.compare(b.upvotes, a.upvotes));
             }
         }
-
-        // Sort filtered search results by upvotes (most upvoted first)
-        filtered.sort((a, b) -> Integer.compare(b.upvotes, a.upvotes));
 
         renderPosts(filtered);
     }
@@ -634,9 +781,43 @@ public class ForumController {
 
     @FXML
     private void onProfileClicked(MouseEvent event) {
-        if (currentUser != null) {
-            SceneManager.switchToSettings(currentUser);
+        if (currentUser == null) {
+            return;
         }
+        
+        // Create context menu
+        ContextMenu contextMenu = new ContextMenu();
+        
+        // Settings menu item
+        MenuItem settingsItem = new MenuItem("Settings");
+        settingsItem.setOnAction(e -> {
+            SceneManager.switchToSettings(currentUser);
+        });
+        settingsItem.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 14; -fx-padding: 8 16;");
+        
+        // Logout menu item
+        MenuItem logoutItem = new MenuItem("Logout");
+        logoutItem.setOnAction(e -> {
+            handleLogout();
+        });
+        logoutItem.setStyle("-fx-text-fill: #3D348B; -fx-font-size: 14; -fx-padding: 8 16;");
+        
+        contextMenu.getItems().addAll(settingsItem, logoutItem);
+        contextMenu.setStyle("-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-radius: 4;");
+        
+        // Show context menu at the click location
+        contextMenu.show(usernameLabel, event.getScreenX(), event.getScreenY());
+    }
+    
+    /**
+     * Handles user logout - navigates back to login page
+     */
+    private void handleLogout() {
+        // Clear current user
+        currentUser = null;
+        
+        // Navigate to login page
+        SceneManager.switchToLogin();
     }
 
     @FXML
@@ -644,6 +825,13 @@ public class ForumController {
         if (currentUser == null) {
             System.out.println("User must be logged in to view home feed.");
             return;
+        }
+        
+        // Hide filter strip on Home view
+        isExploreView = false;
+        if (filterStrip != null) {
+            filterStrip.setVisible(false);
+            filterStrip.setManaged(false);
         }
         
         try {
@@ -673,6 +861,13 @@ public class ForumController {
 
     @FXML
     private void onExploreClicked() {
+        // Show filter strip on Explore view
+        isExploreView = true;
+        if (filterStrip != null) {
+            filterStrip.setVisible(true);
+            filterStrip.setManaged(true);
+        }
+        
         try {
             // Get all posts sorted by number of likes (descending)
             List<PostDAO.PostDTO> posts = postDAO.getAllPostsSortedByLikes();
@@ -685,17 +880,52 @@ public class ForumController {
                 searchField.clear();
             }
             
-            // Render posts
-            renderPosts(cachedPosts);
+            // Apply filters and render posts
+            applyFilters();
         } catch (SQLException e) {
             System.err.println("Error loading explore posts: " + e.getMessage());
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Applies filters (community, tag, sort) to cached posts and renders them
+     */
+    private void applyFilters() {
+        if (!isExploreView) {
+            return;
+        }
+        
+        // Reload posts if sorting by Latest or Oldest (need time-based sorting)
+        if (sortByFilter != null && sortByFilter.getValue() != null) {
+            String sortOption = sortByFilter.getValue();
+            if (sortOption.equals("Latest") || sortOption.equals("Oldest")) {
+                try {
+                    cachedPosts = postDAO.getAllPosts();
+                } catch (SQLException e) {
+                    System.err.println("Error reloading posts for time-based sort: " + e.getMessage());
+                }
+            }
+        }
+        
+        // Use performSearch which handles all filters including search keyword
+        performSearch();
+    }
 
     @FXML
     private void onAllClicked() {
         System.out.println("All navigation clicked");
+    }
+
+    @FXML
+    private void onCoursesClicked() {
+        if (currentUser == null) {
+            System.out.println("User must be logged in to view courses.");
+            return;
+        }
+        
+        // Navigate to CourseSelection page
+        SceneManager.switchToCourseSelection(currentUser);
     }
 
     @FXML

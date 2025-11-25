@@ -220,6 +220,34 @@ public class PostDAO {
     	 return list;
     	}
 
+    	/**
+    	 * Gets all distinct tags from posts
+    	 */
+    	public List<String> getAllTags() throws SQLException {
+    	 List<String> list = new ArrayList<>();
+
+    	 String sql = """
+    	     SELECT DISTINCT tag
+    	     FROM Posts
+    	     WHERE tag IS NOT NULL AND tag != ''
+    	     ORDER BY tag
+    	     """;
+
+    	 try (Connection conn = Database.getConnection();
+    	      PreparedStatement ps = conn.prepareStatement(sql);
+    	      ResultSet rs = ps.executeQuery()) {
+
+    	     while (rs.next()) {
+    	         String tag = rs.getString("tag");
+    	         if (tag != null && !tag.trim().isEmpty()) {
+    	             list.add(tag);
+    	         }
+    	     }
+    	 }
+
+    	 return list;
+    	}
+
     	//------------- Insert new post -------------
 
     	public void createPost(int communityId, int userId, String title, String content, String tag)

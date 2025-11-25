@@ -108,4 +108,26 @@ public class SceneManager {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * Switches to the Course Selection view with user data
+	 */
+	public static void switchToCourseSelection(User user) {
+		try {
+			FXMLLoader loader = new FXMLLoader(SceneManager.class.getResource("/edu/northeastern/uniforum/forum/view/CourseSelection.fxml"));
+			Parent root = loader.load();
+			Scene scene = new Scene(root, 1000, 600);
+			Main.getPrimaryStage().setScene(scene);
+			Main.getPrimaryStage().setResizable(false);
+			Main.getPrimaryStage().show();
+			
+			// Initialize controller with user data
+			edu.northeastern.uniforum.forum.controller.CourseSelectionController controller = loader.getController();
+			if (controller != null) {
+				controller.setCurrentUser(user);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

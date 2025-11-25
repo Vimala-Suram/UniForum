@@ -32,9 +32,17 @@ public class LoginController {
         User user = userDAO.getUserByUsername(username);
         
         if (user != null && PasswordUtil.checkPassword(password, user.getPasswordHash())) {
-            // Success: Switch to Forum View
+            // Success: Check if user has joined communities
             messageLabel.setText("Login Successful! Welcome, " + user.getUsername());
-            SceneManager.switchToForum(user);
+            
+            // Check if user has joined any communities
+            if (!userDAO.hasUserJoinedCommunities(user.getUserId())) {
+                // New user - redirect to course selection
+                SceneManager.switchToCourseSelection(user);
+            } else {
+                // Existing user - go to forum
+                SceneManager.switchToForum(user);
+            }
         } else {
             messageLabel.setText("Invalid username or password.");
         }
