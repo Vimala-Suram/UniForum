@@ -1,5 +1,6 @@
 package edu.northeastern.uniforum.forum.controller;
 
+import application.Main;
 import edu.northeastern.uniforum.forum.dao.UserDAO;
 import edu.northeastern.uniforum.forum.model.User;
 import edu.northeastern.uniforum.forum.util.PasswordUtil;
@@ -28,36 +29,116 @@ public class SettingsController {
     @FXML private Label messageLabel;
     @FXML private Label usernameLabel;
     @FXML private VBox mainContentArea;
+    @FXML private javafx.scene.control.Button scheduleCallButton;
+    @FXML private javafx.scene.control.Button saveButton;
+    @FXML private javafx.scene.control.Button cancelButton;
+    @FXML private VBox securitySection;
+    @FXML private HBox actionButtonsContainer;
     
-    private User currentUser;
+    private User currentUser; // The logged-in user
+    private User viewedUser; // The user whose profile is being viewed
     private UserDAO userDAO = new UserDAO();
     
     public void initData(User user) {
-        this.currentUser = user;
+        this.viewedUser = user;
+        // If currentUser is not set, assume user is viewing their own profile
+        if (this.currentUser == null) {
+            this.currentUser = user;
+        }
         
         // Set grow constraints programmatically (parent is now available)
         if (mainContentArea != null && mainContentArea.getParent() instanceof HBox) {
             HBox.setHgrow(mainContentArea, Priority.ALWAYS);
         }
         
-        // Populate fields with current user data (with null checks)
+        // Populate fields with viewed user data (with null checks)
         if (usernameField != null) {
-            usernameField.setText(user.getUsername());
+            usernameField.setText(viewedUser.getUsername());
         }
         if (emailField != null) {
-            emailField.setText(user.getEmail() != null ? user.getEmail() : "");
+            emailField.setText(viewedUser.getEmail() != null ? viewedUser.getEmail() : "");
         }
         if (linkedinUrlField != null) {
-            linkedinUrlField.setText(user.getLinkedinUrl() != null ? user.getLinkedinUrl() : "");
+            linkedinUrlField.setText(viewedUser.getLinkedinUrl() != null ? viewedUser.getLinkedinUrl() : "");
         }
         if (githubUrlField != null) {
-            githubUrlField.setText(user.getGithubUrl() != null ? user.getGithubUrl() : "");
+            githubUrlField.setText(viewedUser.getGithubUrl() != null ? viewedUser.getGithubUrl() : "");
         }
         if (departmentField != null) {
-            departmentField.setText(user.getDepartment() != null ? user.getDepartment() : "");
+            departmentField.setText(viewedUser.getDepartment() != null ? viewedUser.getDepartment() : "");
         }
         if (usernameLabel != null) {
-            usernameLabel.setText(user.getUsername());
+            usernameLabel.setText(viewedUser.getUsername());
+        }
+        
+        // Determine if viewing own profile or another user's profile
+        boolean isViewingOtherUser = currentUser != null && viewedUser != null && 
+                                     currentUser.getUserId() != viewedUser.getUserId();
+        boolean isOwnProfile = !isViewingOtherUser;
+        
+        // Show "Schedule a Call" button only if viewing another user's profile
+        if (scheduleCallButton != null) {
+            scheduleCallButton.setVisible(isViewingOtherUser);
+            scheduleCallButton.setManaged(isViewingOtherUser);
+        }
+        
+        // Hide security section if viewing another user's profile
+        if (securitySection != null) {
+            securitySection.setVisible(isOwnProfile);
+            securitySection.setManaged(isOwnProfile);
+        }
+        
+        // Hide save/cancel buttons if viewing another user's profile
+        if (actionButtonsContainer != null) {
+            actionButtonsContainer.setVisible(isOwnProfile);
+            actionButtonsContainer.setManaged(isOwnProfile);
+        }
+        if (saveButton != null) {
+            saveButton.setVisible(isOwnProfile);
+            saveButton.setManaged(isOwnProfile);
+        }
+        if (cancelButton != null) {
+            cancelButton.setVisible(isOwnProfile);
+            cancelButton.setManaged(isOwnProfile);
+        }
+        
+        // Make fields read-only (non-editable) if viewing another user's profile
+        // Also style them to look like display-only fields (gray background, no border)
+        String readOnlyStyle = "-fx-background-color: #F5F5F5; -fx-text-fill: #333; -fx-border-color: transparent; -fx-cursor: default;";
+        
+        if (usernameField != null) {
+            usernameField.setEditable(isOwnProfile);
+            usernameField.setStyle(isOwnProfile ? null : readOnlyStyle);
+        }
+        if (emailField != null) {
+            emailField.setEditable(isOwnProfile);
+            emailField.setStyle(isOwnProfile ? null : readOnlyStyle);
+        }
+        if (linkedinUrlField != null) {
+            linkedinUrlField.setEditable(isOwnProfile);
+            linkedinUrlField.setStyle(isOwnProfile ? null : readOnlyStyle);
+        }
+        if (githubUrlField != null) {
+            githubUrlField.setEditable(isOwnProfile);
+            githubUrlField.setStyle(isOwnProfile ? null : readOnlyStyle);
+        }
+        if (departmentField != null) {
+            departmentField.setEditable(isOwnProfile);
+            departmentField.setStyle(isOwnProfile ? null : readOnlyStyle);
+        }
+        
+        // Hide password fields (already handled by hiding security section, but keep for safety)
+        if (currentPasswordField != null) {
+            currentPasswordField.setVisible(isOwnProfile);
+            currentPasswordField.setManaged(isOwnProfile);
+        }
+        if (newPasswordField != null) {
+            newPasswordField.setVisible(isOwnProfile);
+            newPasswordField.setManaged(isOwnProfile);
+        }
+        if (confirmPasswordField != null) {
+            confirmPasswordField.setVisible(isOwnProfile);
+            confirmPasswordField.setManaged(isOwnProfile);
         }
     }
     
@@ -113,7 +194,7 @@ public class SettingsController {
             }
             
             // Verify current password
-            if (!PasswordUtil.checkPassword(currentPassword, currentUser.getPasswordHash())) {
+            if (!PasswordUtil.checkPassword(currentPassword, viewedUser.getPasswordHash())) {
                 if (messageLabel != null) {
                     messageLabel.setText("Current password is incorrect.");
                 }
@@ -141,16 +222,16 @@ public class SettingsController {
         }
         
         // Check if fields changed
-        boolean usernameChanged = !newUsername.equals(currentUser.getUsername());
-        boolean emailChanged = !newEmail.equals(currentUser.getEmail());
-        boolean linkedinChanged = !newLinkedinUrl.equals(currentUser.getLinkedinUrl() != null ? currentUser.getLinkedinUrl() : "");
-        boolean githubChanged = !newGithubUrl.equals(currentUser.getGithubUrl() != null ? currentUser.getGithubUrl() : "");
-        boolean departmentChanged = !newDepartment.equals(currentUser.getDepartment() != null ? currentUser.getDepartment() : "");
+        boolean usernameChanged = !newUsername.equals(viewedUser.getUsername());
+        boolean emailChanged = !newEmail.equals(viewedUser.getEmail());
+        boolean linkedinChanged = !newLinkedinUrl.equals(viewedUser.getLinkedinUrl() != null ? viewedUser.getLinkedinUrl() : "");
+        boolean githubChanged = !newGithubUrl.equals(viewedUser.getGithubUrl() != null ? viewedUser.getGithubUrl() : "");
+        boolean departmentChanged = !newDepartment.equals(viewedUser.getDepartment() != null ? viewedUser.getDepartment() : "");
         
         // If username changed, check if new username already exists
         if (usernameChanged) {
             User existingUser = userDAO.getUserByUsername(newUsername);
-            if (existingUser != null && existingUser.getUserId() != currentUser.getUserId()) {
+            if (existingUser != null && existingUser.getUserId() != viewedUser.getUserId()) {
                 if (messageLabel != null) {
                     messageLabel.setText("Username already exists. Please choose a different username.");
                 }
@@ -158,9 +239,17 @@ public class SettingsController {
             }
         }
         
+        // Only allow updates if viewing own profile
+        if (currentUser == null || viewedUser == null || currentUser.getUserId() != viewedUser.getUserId()) {
+            if (messageLabel != null) {
+                messageLabel.setText("You can only edit your own profile.");
+            }
+            return;
+        }
+        
         // Update user in database
         boolean updateSuccess = userDAO.updateUser(
-            currentUser.getUserId(),
+            viewedUser.getUserId(),
             usernameChanged ? newUsername : null,
             emailChanged ? newEmail : null,
             newPasswordHash,
@@ -170,16 +259,16 @@ public class SettingsController {
         );
         
         if (updateSuccess) {
-            // Update current user object with new values
-            String updatedUsername = usernameChanged ? newUsername : currentUser.getUsername();
-            String updatedEmail = emailChanged ? newEmail : currentUser.getEmail();
-            String updatedPasswordHash = newPasswordHash != null ? newPasswordHash : currentUser.getPasswordHash();
-            String updatedLinkedinUrl = linkedinChanged ? newLinkedinUrl : (currentUser.getLinkedinUrl() != null ? currentUser.getLinkedinUrl() : "");
-            String updatedGithubUrl = githubChanged ? newGithubUrl : (currentUser.getGithubUrl() != null ? currentUser.getGithubUrl() : "");
-            String updatedDepartment = departmentChanged ? newDepartment : (currentUser.getDepartment() != null ? currentUser.getDepartment() : "");
+            // Update viewed user object with new values
+            String updatedUsername = usernameChanged ? newUsername : viewedUser.getUsername();
+            String updatedEmail = emailChanged ? newEmail : viewedUser.getEmail();
+            String updatedPasswordHash = newPasswordHash != null ? newPasswordHash : viewedUser.getPasswordHash();
+            String updatedLinkedinUrl = linkedinChanged ? newLinkedinUrl : (viewedUser.getLinkedinUrl() != null ? viewedUser.getLinkedinUrl() : "");
+            String updatedGithubUrl = githubChanged ? newGithubUrl : (viewedUser.getGithubUrl() != null ? viewedUser.getGithubUrl() : "");
+            String updatedDepartment = departmentChanged ? newDepartment : (viewedUser.getDepartment() != null ? viewedUser.getDepartment() : "");
             
-            currentUser = new User(
-                currentUser.getUserId(),
+            viewedUser = new User(
+                viewedUser.getUserId(),
                 updatedUsername,
                 updatedPasswordHash,
                 updatedEmail,
@@ -213,20 +302,20 @@ public class SettingsController {
     @FXML
     private void handleCancelAction() {
         // Reset fields to original values (with null checks)
-        if (usernameField != null) {
-            usernameField.setText(currentUser.getUsername());
+        if (usernameField != null && viewedUser != null) {
+            usernameField.setText(viewedUser.getUsername());
         }
-        if (emailField != null) {
-            emailField.setText(currentUser.getEmail() != null ? currentUser.getEmail() : "");
+        if (emailField != null && viewedUser != null) {
+            emailField.setText(viewedUser.getEmail() != null ? viewedUser.getEmail() : "");
         }
-        if (linkedinUrlField != null) {
-            linkedinUrlField.setText(currentUser.getLinkedinUrl() != null ? currentUser.getLinkedinUrl() : "");
+        if (linkedinUrlField != null && viewedUser != null) {
+            linkedinUrlField.setText(viewedUser.getLinkedinUrl() != null ? viewedUser.getLinkedinUrl() : "");
         }
-        if (githubUrlField != null) {
-            githubUrlField.setText(currentUser.getGithubUrl() != null ? currentUser.getGithubUrl() : "");
+        if (githubUrlField != null && viewedUser != null) {
+            githubUrlField.setText(viewedUser.getGithubUrl() != null ? viewedUser.getGithubUrl() : "");
         }
-        if (departmentField != null) {
-            departmentField.setText(currentUser.getDepartment() != null ? currentUser.getDepartment() : "");
+        if (departmentField != null && viewedUser != null) {
+            departmentField.setText(viewedUser.getDepartment() != null ? viewedUser.getDepartment() : "");
         }
         if (currentPasswordField != null) {
             currentPasswordField.clear();
@@ -242,9 +331,74 @@ public class SettingsController {
         }
     }
     
+    /**
+     * Sets the logged-in user (separate from the viewed user)
+     */
+    public void setLoggedInUser(User loggedInUser) {
+        this.currentUser = loggedInUser;
+    }
+    
+    /**
+     * Handles the "Schedule a Call" button click
+     */
+    @FXML
+    private void handleScheduleCall() {
+        if (viewedUser == null || currentUser == null) {
+            return;
+        }
+        
+        // Open meeting scheduler with the viewed user's email
+        openMeetingScheduler(viewedUser.getEmail());
+    }
+    
+    /**
+     * Opens the meeting scheduler dialog with pre-filled email
+     */
+    private void openMeetingScheduler(String attendeeEmail) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/edu/northeastern/uniforum/forum/view/MeetingScheduler.fxml")
+            );
+            javafx.scene.Parent meetingRoot = loader.load();
+            
+            MeetingController meetingController = loader.getController();
+            if (meetingController != null) {
+                // Set logged-in user and target user
+                if (currentUser != null) {
+                    meetingController.setLoggedInUser(currentUser);
+                }
+                if (viewedUser != null) {
+                    meetingController.setTargetUser(viewedUser);
+                }
+                // Pre-fill email if available
+                if (attendeeEmail != null && !attendeeEmail.isEmpty()) {
+                    meetingController.setAttendeeEmail(attendeeEmail);
+                }
+            }
+            
+            javafx.stage.Stage meetingStage = new javafx.stage.Stage();
+            meetingStage.setTitle("Schedule a Meeting");
+            meetingStage.setScene(new javafx.scene.Scene(meetingRoot, 500, 600));
+            meetingStage.setResizable(false);
+            meetingStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            meetingStage.initOwner(Main.getPrimaryStage());
+            meetingStage.show();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (messageLabel != null) {
+                messageLabel.setText("Error opening meeting scheduler: " + e.getMessage());
+            }
+        }
+    }
+    
     @FXML
     private void handleBackAction() {
-        SceneManager.switchToForum(currentUser);
+        if (currentUser != null) {
+            SceneManager.switchToForum(currentUser);
+        } else {
+            SceneManager.switchToLogin();
+        }
     }
     
     @FXML
@@ -286,7 +440,8 @@ public class SettingsController {
      */
     @FXML
     private void onUsernameClicked(MouseEvent event) {
-        if (currentUser == null) {
+        // Only show context menu if viewing own profile
+        if (currentUser == null || viewedUser == null || currentUser.getUserId() != viewedUser.getUserId()) {
             return;
         }
         

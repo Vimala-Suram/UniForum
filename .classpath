@@ -12,6 +12,56 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-api-client-2.0.0.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-api-client-gson-2.0.0.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-api-services-calendar-v3-rev20220715-2.0.0.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-http-client-1.43.3.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-http-client-gson-1.43.3.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-oauth-client-1.34.1.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-oauth-client-java6-1.34.1.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/google-oauth-client-jetty-1.34.1.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/gson-2.10.1.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="/Users/payaljadhav/Desktop/MYPC/NEU/Notes/semwise/sem5/cloned_project/UniForum/lib/guava-31.1-jre.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-24">
 		<attributes>
 			<attribute name="module" value="true"/>

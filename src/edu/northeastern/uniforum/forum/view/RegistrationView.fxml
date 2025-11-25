@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox prefHeight="600.0" prefWidth="1000.0" 
+<HBox prefHeight="800.0" prefWidth="1400.0" 
       xmlns="http://javafx.com/fxml/1" 
       xmlns:fx="http://javafx.com/fxml/1" 
       fx:controller="edu.northeastern.uniforum.forum.controller.RegistrationController">

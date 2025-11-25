@@ -484,13 +484,25 @@ public class ForumController {
             dialogContainer.getChildren().add(dialogContent);
 
             // Size the dialog relative to the main window (80% of window size)
-            Stage mainStage = (Stage) modalOverlay.getScene().getWindow();
-            double windowWidth = mainStage.getWidth();
-            double windowHeight = mainStage.getHeight();
+            double dialogWidth = 750;
+            double dialogHeight = 600;
             
-            // Set dialog size (70% of window width, 80% of height, but cap at max sizes)
-            double dialogWidth = Math.min(windowWidth * 0.70, 750);
-            double dialogHeight = Math.min(windowHeight * 0.80, 600);
+            // Try to get window size, but use defaults if not available
+            if (modalOverlay != null && modalOverlay.getScene() != null) {
+                javafx.stage.Window window = modalOverlay.getScene().getWindow();
+                if (window instanceof javafx.stage.Stage) {
+                    javafx.stage.Stage mainStage = (javafx.stage.Stage) window;
+                    if (mainStage != null) {
+                        double windowWidth = mainStage.getWidth();
+                        double windowHeight = mainStage.getHeight();
+                        if (windowWidth > 0 && windowHeight > 0) {
+                            // Set dialog size (70% of window width, 80% of height, but cap at max sizes)
+                            dialogWidth = Math.min(windowWidth * 0.70, 750);
+                            dialogHeight = Math.min(windowHeight * 0.80, 600);
+                        }
+                    }
+                }
+            }
             
             dialogContainer.setPrefWidth(dialogWidth);
             dialogContainer.setPrefHeight(dialogHeight);
@@ -718,13 +730,25 @@ public class ForumController {
             dialogContainer.getChildren().add(dialogContent);
 
             // Size the dialog relative to the main window (70% of window size)
-            Stage mainStage = (Stage) modalOverlay.getScene().getWindow();
-            double windowWidth = mainStage.getWidth();
-            double windowHeight = mainStage.getHeight();
+            double dialogWidth = 650;
+            double dialogHeight = 550;
             
-            // Set dialog size (70% of window, but cap at max sizes)
-            double dialogWidth = Math.min(windowWidth * 0.7, 650);
-            double dialogHeight = Math.min(windowHeight * 0.75, 550);
+            // Try to get window size, but use defaults if not available
+            if (modalOverlay != null && modalOverlay.getScene() != null) {
+                javafx.stage.Window window = modalOverlay.getScene().getWindow();
+                if (window instanceof javafx.stage.Stage) {
+                    javafx.stage.Stage mainStage = (javafx.stage.Stage) window;
+                    if (mainStage != null) {
+                        double windowWidth = mainStage.getWidth();
+                        double windowHeight = mainStage.getHeight();
+                        if (windowWidth > 0 && windowHeight > 0) {
+                            // Set dialog size (70% of window, but cap at max sizes)
+                            dialogWidth = Math.min(windowWidth * 0.7, 650);
+                            dialogHeight = Math.min(windowHeight * 0.75, 550);
+                        }
+                    }
+                }
+            }
             
             dialogContainer.setPrefWidth(dialogWidth);
             dialogContainer.setPrefHeight(dialogHeight);
@@ -939,8 +963,9 @@ public class ForumController {
     private void navigateToUserSettings(String username) {
         UserDAO userDAO = new UserDAO();
         User user = userDAO.getUserByUsername(username);
-        if (user != null) {
-            SceneManager.switchToSettings(user);
+        if (user != null && currentUser != null) {
+            // Pass both logged-in user and viewed user
+            SceneManager.switchToSettings(currentUser, user);
         } else {
             System.out.println("User not found: " + username);
         }

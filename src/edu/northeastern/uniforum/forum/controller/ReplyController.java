@@ -359,8 +359,9 @@ public class ReplyController {
     private void navigateToUserSettings(String username) {
         UserDAO userDAO = new UserDAO();
         User user = userDAO.getUserByUsername(username);
-        if (user != null) {
-            SceneManager.switchToSettings(user);
+        if (user != null && currentUser != null) {
+            // Pass both logged-in user and viewed user
+            SceneManager.switchToSettings(currentUser, user);
         } else {
             System.out.println("User not found: " + username);
         }

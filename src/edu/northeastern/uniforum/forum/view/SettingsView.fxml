@@ -96,7 +96,7 @@
                 </VBox>
                 
                 <!-- Security Section -->
-                <VBox spacing="20.0">
+                <VBox fx:id="securitySection" spacing="20.0">
                     <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #3D348B;" 
                           text="Security" />
                     
@@ -121,12 +121,19 @@
                     </VBox>
                 </VBox>
                 
-                <!-- Action Buttons -->
-                <HBox spacing="15.0">
+                <!-- Schedule Call Button (only visible when viewing another user's profile) -->
+                <HBox spacing="15.0" fx:id="scheduleCallContainer">
+                    <Button fx:id="scheduleCallButton" text="Schedule a Call" onAction="#handleScheduleCall" 
+                           style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 8px; -fx-padding: 12 30;" 
+                           prefHeight="45.0" visible="false" managed="false" />
+                </HBox>
+                
+                <!-- Action Buttons (only visible when viewing own profile) -->
+                <HBox fx:id="actionButtonsContainer" spacing="15.0">
                     <Button fx:id="saveButton" text="Save Changes" onAction="#handleSaveAction" 
                            style="-fx-background-color: #7678ED; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 8px; -fx-padding: 12 30;" 
                            prefHeight="45.0" />
-                    <Button text="Cancel" onAction="#handleCancelAction" 
+                    <Button fx:id="cancelButton" text="Cancel" onAction="#handleCancelAction" 
                            style="-fx-background-color: transparent; -fx-text-fill: #7678ED; -fx-font-size: 16px; -fx-border-color: #7678ED; -fx-border-width: 2px; -fx-border-radius: 8px; -fx-padding: 12 30;" 
                            prefHeight="45.0" />
                 </HBox>

@@ -22,7 +22,9 @@ public class SceneManager {
 			Parent root = loader.load();
 			Scene scene = new Scene(root, width, height);
 			stage.setScene(scene);
-			stage.setResizable(false);
+			stage.setResizable(true);
+			// Center the stage on screen
+			stage.centerOnScreen();
 			stage.show();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -33,14 +35,14 @@ public class SceneManager {
 	 * Switches to the Login view
 	 */
 	public static void switchToLogin() {
-		loadScene("/edu/northeastern/uniforum/forum/view/LoginView.fxml", Main.getPrimaryStage(), 1000, 600);
+		loadScene("/edu/northeastern/uniforum/forum/view/LoginView.fxml", Main.getPrimaryStage(), 1400, 800);
 	}
 	
 	/**
 	 * Switches to the Registration view
 	 */
 	public static void switchToRegistration() {
-		loadScene("/edu/northeastern/uniforum/forum/view/RegistrationView.fxml", Main.getPrimaryStage(), 1000, 600);
+		loadScene("/edu/northeastern/uniforum/forum/view/RegistrationView.fxml", Main.getPrimaryStage(), 1400, 800);
 	}
 	
 	/**
@@ -53,6 +55,7 @@ public class SceneManager {
 			Scene scene = new Scene(root, 1400, 800);
 			Main.getPrimaryStage().setScene(scene);
 			Main.getPrimaryStage().setResizable(true);
+			Main.getPrimaryStage().centerOnScreen();
 			Main.getPrimaryStage().show();
 			
 			// Initialize controller with user data
@@ -75,6 +78,7 @@ public class SceneManager {
 			Scene scene = new Scene(root, 1400, 800);
 			Main.getPrimaryStage().setScene(scene);
 			Main.getPrimaryStage().setResizable(true);
+			Main.getPrimaryStage().centerOnScreen();
 			Main.getPrimaryStage().show();
 			
 			// Initialize controller with user data
@@ -89,20 +93,32 @@ public class SceneManager {
 	
 	/**
 	 * Switches to the Settings view with user data
+	 * @param user The user whose profile is being viewed
 	 */
 	public static void switchToSettings(User user) {
+		switchToSettings(user, user); // If no logged-in user specified, assume viewing own profile
+	}
+	
+	/**
+	 * Switches to the Settings view with both logged-in user and viewed user
+	 * @param loggedInUser The currently logged-in user
+	 * @param viewedUser The user whose profile is being viewed
+	 */
+	public static void switchToSettings(User loggedInUser, User viewedUser) {
 		try {
 			FXMLLoader loader = new FXMLLoader(SceneManager.class.getResource("/edu/northeastern/uniforum/forum/view/SettingsView.fxml"));
 			Parent root = loader.load();
 			Scene scene = new Scene(root, 1400, 800);
 			Main.getPrimaryStage().setScene(scene);
 			Main.getPrimaryStage().setResizable(true);
+			Main.getPrimaryStage().centerOnScreen();
 			Main.getPrimaryStage().show();
 			
 			// Initialize controller with user data
 			SettingsController controller = loader.getController();
 			if (controller != null) {
-				controller.initData(user);
+				controller.setLoggedInUser(loggedInUser);
+				controller.initData(viewedUser);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -116,9 +132,10 @@ public class SceneManager {
 		try {
 			FXMLLoader loader = new FXMLLoader(SceneManager.class.getResource("/edu/northeastern/uniforum/forum/view/CourseSelection.fxml"));
 			Parent root = loader.load();
-			Scene scene = new Scene(root, 1000, 600);
+			Scene scene = new Scene(root, 1400, 800);
 			Main.getPrimaryStage().setScene(scene);
-			Main.getPrimaryStage().setResizable(false);
+			Main.getPrimaryStage().setResizable(true);
+			Main.getPrimaryStage().centerOnScreen();
 			Main.getPrimaryStage().show();
 			
 			// Initialize controller with user data

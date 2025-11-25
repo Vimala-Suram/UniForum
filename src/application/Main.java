@@ -22,12 +22,14 @@ public class Main extends Application {
                 throw new IllegalStateException("LoginView.fxml not found on classpath");
             }
 
-            Scene scene = new Scene(root, 900, 600);
+            Scene scene = new Scene(root, 1400, 800);
             scene.getStylesheets().add(
                 getClass().getResource("application.css").toExternalForm()
             );
             primaryStage.setScene(scene);
             primaryStage.setTitle("UniForum - Forum");
+            primaryStage.setResizable(true);
+            primaryStage.centerOnScreen();
             primaryStage.show();
 
         } catch(Exception e) {
